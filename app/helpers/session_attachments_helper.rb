@@ -1,0 +1,2 @@
+module SessionAttachmentsHelper
+end

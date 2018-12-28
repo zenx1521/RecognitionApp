@@ -1,0 +1,365 @@
+.bg-modal
+  #close +
+  #imageContainerModal{:style => "position:relative;text-align: center; display: inline-block"}
+    = image_tag @session_attachments[0].image.url, id: "imgContentBig"
+  #modalCheckboxes
+    #checkboxesHolder
+
+
+#post_content
+  #description
+    %h1{:style => "text-align:center"}= @session.title
+    <br>
+    %h3{:style => "text-align:center"}= @session.description
+    <br>
+    #token{:style => "text-align:center"}
+      %h2  Token
+      %h3= @session.token
+
+  <br>
+  #links{:style => "text-align: center"}
+    = link_to "Edit", edit_photo_session_path(@session), :style => " background-color:green; border:1px solid #660000; border-radius:5px; color:#fff; margin-right:10px; padding:10px 10px 10px 10px;"
+    = link_to "Delete", photo_session_path(@session), method: :delete, data: {confirm: "Are you sure you want to destroy your session?"},:style => " background-color:#cc0000; border:1px solid #660000; border-radius:5px; color:#fff; margin-right:10px; padding:10px 10px 10px 10px;"
+    = link_to "Home", root_path,:style => " background-color:blue; border:1px solid #660000; border-radius:5px; color:#fff; margin-right:10px; padding:10px 10px 10px 10px;" 
+  <br>
+  <br>
+
+  .slider{:style => "text-align: center"}
+    /= image_tag @session_attachments[0].image.url(:thumb), id: "imgContent"
+    
+    #imageContainer{:style => "position: relative; text-align: center; display: inline-block"}
+      = image_tag @session_attachments[0].image.url, id: "imgContent", style: "width:800px"
+  #buttons{:style => "text-align: center;"}
+    = button_tag "prev", class: 'prev'
+    = button_tag "next", class: 'next'
+  #checkboxes{:style => "text-align: center; display: block  "}
+  #savepoints{:style => "text-align: center"}
+    = button_tag "Save Points", class: 'save'
+  #addcheckbox{:style => "text-align: center"}
+    %input{:type => "text", :class => "checkboxText"}
+    = button_tag "Add New Checkbox", class: 'addCheckbox'
+  #savechecbkoxes{:style => "text-align: center"} 
+    = button_tag "Save Checkboxes", class: 'saveCheckboxes'
+  #openfullview{:style => "text-align: center"}
+    = button_tag "Full View", class: 'openModal'
+    = button_tag "Hide Points", class: 'hide'
+  <br>
+  <br>
+  <br>
+  - @session_statuses.each do |s|
+    - if s.finished
+      #session{:style => "text-align: center"}
+        sesja zakonczona
+        = button_tag "Generate txt", class: 'generateTXT', value: s.user_id
+
+  - @session_attachments.each do |s|
+    = content_tag :div, class: "attachment", data: {s_points: s.points,id: s.id }  do
+      = s.image_width
+      = s.image_height
+  %div.currentId{ data: {current_id: current_user.id} }
+    
+  = content_tag :div, "", class: "attachment2", data: {s_checkboxes: @session.checkboxs}
+
+  = content_tag :div, "", class: "temp_information", data: {session_attachments: @session_attachments}
+
+  = content_tag :div, "", class: "temp_information2", data: {session_id: @session.id}
+
+
+
+
+
+
+
+:javascript 
+  $(document).ready( () => {
+    var temp = $('.temp_information').data("sessionAttachments")//$('.temp_information').data('session_attachments');
+    var sessionId = $('.temp_information2').data("sessionId");
+    console.log(temp);
+    var array = [];
+    var pts = $('.attachment');
+    var hide = false;
+    
+    function setModalCheckboxesLayout(){
+      var modalCheckboxesContent = $("#modalCheckboxes")[0];
+      var x = temp[i].image_width;
+      var y = temp[i].image_height;
+      modalCheckboxesContent.style.top = y + 80 +  "px";
+      modalCheckboxesContent.style.left = (x/2)  + "px";
+    }
+
+    $('.hide').click(e => {
+      var points = $('.myPoint');
+      if(hide){
+        for(var i = 0; i < points.length;i++){
+          e.target.innerText = "Hide Points";
+          points[i].style.display = 'block';
+          hide = false;
+        }
+      } else {
+        for(var i = 0; i < points.length;i++){
+          e.target.innerText = "Show Points";
+          points[i].style.display = 'none';
+          hide = true;
+        }
+      }
+    })
+
+    $("#modalCheckboxes")[0];
+    $(".openModal").click(e => {
+      $(".bg-modal")[0].style.display = 'flex';
+    })
+    $("#close").click(e => {
+      $(".bg-modal")[0].style.display = 'none';
+    })
+    
+    var generator = $('.generateTXT');
+    for(var i = 0;i < generator.length;i++){
+      generator[i].addEventListener("click",event => {
+        $.ajax({
+          type: "POST",
+          url: "/photo_sessions/generate_txt",
+          data: {user_id : event.target.value,session_id: sessionId },
+          success: function(msg){
+            alert( "Data Saved: " + msg );
+          },
+          error: function(XMLHttpRequest, textStatus, errorThrown) {
+            alert("some error");
+          }
+        });
+      })
+    }
+
+    //console.log(JSON.parse(currentId[0].dataset["currentId"]));
+    var checkboxes = JSON.parse($('.attachment2')[0].dataset["sCheckboxes"]);
+    
+
+    for(var x = 0; x < pts.length;x++){
+      array.push(JSON.parse(pts[x].dataset["sPoints"]))
+    }
+    //console.log(pts.data("sPoints"));
+    //console.log(pts.data("id"));
+    function loadModalPoints(){
+      var imgContainer = $('#imageContainerModal');
+
+      for(var z = 0; z < array[i].length; z++){
+        var x = array[i][z].x*temp[i].image_width;
+        var y = array[i][z].y*temp[i].image_height;
+
+
+        var div = document.createElement("div");
+        div.style.cssText = "position: absolute;width:20px;height:20px;background-color: red;z-index: 2000";
+        div.className = "myPoint";
+        div.style.top = (y-10) + 'px' ;
+        div.style.left = (x-10) + 'px' ;
+        div.dataset["id"] = array[i][z].id;
+        imgContainer[0].appendChild(div);
+
+      }
+
+    }
+    function loadPoints(){
+      var imgContainer = $('#imageContainer');
+      var imgContent = $('#imgContent');
+
+      console.log(imgContent[0].width);
+      console.log(imgContent[0].height);
+      for(var z = 0; z < array[i].length; z++){
+        console.log(array[i][z].x);
+        console.log(imgContent[0].width);
+        console.log(imgContent[0].width*array[i][z].x);
+        var x = array[i][z].x*imgContent[0].width;
+        var y = array[i][z].y*imgContent[0].height;
+
+        var div = document.createElement("div");
+        div.style.cssText = "position: absolute;width:20px;height:20px;background-color: red";
+        div.className = "myPoint";
+        div.style.top = (y-10) + 'px' ;
+        div.style.left = (x-10) + 'px' ;
+        div.dataset["id"] = array[i][z].id;
+        imgContainer[0].appendChild(div);
+
+      }
+    }
+    function deletePoints(){
+      $('.myPoint').remove();  
+    }
+    function addEventListenersToCheckboxes(){
+      var checkboxes = $('.optionCheckbox');
+      for(var i = 0; i < checkboxes.length; i++){
+        checkboxes[i].addEventListener("click",event =>{
+          for(var i = 0; i < checkboxes.length; i++){
+            checkboxes[i].checked = false;
+            checkboxes[i].classList.remove("choosen");
+          }
+          event.target.checked = true;
+          event.target.classList.add("choosen");         
+        })
+      }
+    }
+
+    function loadCheckboxes(checkboxesHolderId){
+      checkboxes.forEach(chBox => {
+        var checkboxDiv = document.createElement("label");
+        var checkbox = document.createElement("input");
+        checkboxDiv.innerText = chBox.description;
+        checkboxDiv.style.cssText = "text-align: center; display: inline-block"
+        checkbox.type = "checkbox";
+        checkbox.className = "optionCheckbox"
+        checkbox.value = chBox.description;
+        checkboxDiv.appendChild(checkbox);
+        $(checkboxesHolderId)[0].appendChild(checkboxDiv);
+
+      })
+    }
+
+    var btn = $('.next');
+    var btn2 = $('.prev');
+    var btn3 = $('.save');
+    var btn4 = $('.addCheckbox');
+    var btn5 = $('.saveCheckboxes');
+    var btn6 = $('.saveChoice');
+
+    var i = 0;
+    var currentId = temp[i].id;
+    var pointsTable = [];
+    var checkboxesTable = []
+    loadPoints();
+    img = $('#imgContent');
+    loadCheckboxes('#checkboxes');
+    loadCheckboxes('#checkboxesHolder');
+    btn5.click(e => {
+        $.ajax({
+        type: "POST",
+        url: "/checkboxs",
+        data: {checkboxes : checkboxesTable, sessionId : sessionId },
+        success: function(msg){
+          alert( "Data Saved: " + msg );
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+          alert("some error");
+        }
+      });
+
+    })
+    btn4.click(e => {
+      var text = $('.checkboxText');
+      console.log(text[0].value);
+      var checkboxDiv = document.createElement("div");
+      var checkbox = document.createElement("input");
+      
+      checkboxDiv.innerText = text[0].value;
+      checkbox.type = "checkbox";
+      checkbox.value = text[0].value;
+      checkboxesTable.push(text[0].value);
+      console.log(checkboxesTable);
+      checkboxDiv.appendChild(checkbox);
+      $('.slider')[0].appendChild(checkboxDiv);
+    })
+      /*function addEventListenersForPoints(){
+      var myPoints = $('.myPoint');
+      for(var i = 0; i< myPoints.length;i++){
+        myPoints[i].addEventListener("click",e => {
+          var choosenValue = $('.choosen')[0].value;
+          var currentId = $('.currentId')[0].dataset['currentId'];
+          var currentActive = $('.active')[0].dataset.id;
+          console.log(currentActive);
+          for(var i = 0; i < myPoints.length;i++){
+            myPoints[i].classList.remove("active");
+            myPoints[i].style["background-color"] = "red";
+          };
+
+          //console.log(choosen[0].value);
+          $.ajax({
+            type: "POST",
+            url: "/marks/createOrUpdate",
+            data: {choosenValue : choosenValue, currentId : currentId, currentActive : currentActive},
+            success: function(msg){
+              alert( "Data Saved: " + msg );
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown) {
+              alert("some error");
+            }
+          });
+
+          e.target.classList.add("active");
+          e.target.style["background-color"] = "green";
+        });
+      }
+    }*/
+
+    img.click(e => {
+        var x = e.offsetX; 
+        var y = e.offsetY;
+        var scaleX = x/e.target.width;
+        var scaleY = y/e.target.height;
+        console.log(e.target.height);
+        console.log(scaleY);
+        alert("X Coordinate: " + x + " Y Coordinate: " + y);
+        var div = document.createElement("div");
+        div.style.cssText = "position: absolute;width:20px;height:20px;background-color: red";
+        div.className = "myPoint";
+        div.style.top = (y-10) + 'px' ;
+        div.style.left = (x-10) + 'px' ;
+        var imgContainer = $('#imageContainer');
+        pointsTable.push([scaleX,scaleY]);
+        imgContainer[0].appendChild(div);
+    })
+    btn.click(e =>{
+      if(i < temp.length - 1){
+        pointsTable = [];
+        img = $('#imgContent');
+        var imageOriginal = $('#imgContentBig');
+
+        img[0].src = temp[i+1].image.url;
+        imageOriginal[0].src = temp[i+1].image.url
+        i++;
+        currentId = temp[i].id;
+        console.log(currentId);
+        deletePoints();
+        loadModalPoints();
+        loadPoints();
+        if(i == temp.length -1){
+        }
+
+      }
+    })
+    btn2.click(e =>{
+      if(i > 0){
+        pointsTable = [];
+        if(i == temp.length -1){
+          $('.endButton').remove();
+        }
+        img = $('#imgContent');
+        console.log(temp[i].id);
+        img[0].src = temp[i-1].image.url;
+        i--;
+        currentId = temp[i].id;;
+        deletePoints();
+        loadModalPoints();
+        loadPoints();
+      }
+    })
+
+    btn3.click(e =>{
+
+      var dateToSend = JSON.stringify(pointsTable);
+
+      $.ajax({
+        type: "POST",
+        url: "/points",
+        data: {pts : dateToSend, sessionAttachmentId : currentId },
+        success: function(msg){
+          alert( "Data Saved: " + msg );
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+          alert("some error");
+        }
+      });
+    })
+    var myPoints = $('.myPoint');
+    loadModalPoints();
+    addEventListenersToCheckboxes();
+    setModalCheckboxesLayout();
+  })
+  
+

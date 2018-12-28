@@ -1,0 +1,15 @@
+
+
+#sessions
+  = form_tag session_description_photo_sessions_path, :method => :get,style: "border-radius:5px;border: solid;position:relative;text-align: center;margin: 0 auto;width:50%" do
+    %label{style: "font-size: 20px"} Find session to asset:
+    = text_field_tag "token", ""
+    <br>
+    = submit_tag "Find session"
+
+  - @sessions.each do |session|
+    .session
+      %h2.title= link_to session.title, photo_session_path(session) 
+      %p= time_ago_in_words(session.created_at)
+
+

@@ -1,0 +1,14 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Session:</strong>
+  <%= @session_attachment.session_id %>
+</p>
+
+<p>
+  <strong>Image:</strong>
+  <%= @session_attachment.image %>
+</p>
+
+<%= link_to 'Edit', edit_session_attachment_path(@session_attachment) %> |
+<%= link_to 'Back', session_attachments_path %>

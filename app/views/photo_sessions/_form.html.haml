@@ -1,0 +1,35 @@
+- url = @session.persisted? ? photo_session_path(@session) : photo_sessions_path
+
+.panel.panel-default
+  .panel-heading
+    %h2 New Session 
+  .panel-body
+    = simple_form_for @session, url: url do |f|
+      .form-group{style: 'display:block'}
+        = f.label :title
+        %br
+        = f.text_field :title, class: 'form-control'
+      .form-group{style: 'display:block'}
+        = f.label :description
+        %br
+        = f.text_field :description, class: 'form-control'
+
+      = f.input :single_point, as: :boolean do
+        = f.check_box :single_point, {},"true","false" 
+      %br
+
+      = f.fields_for :session_attachments do |session|
+        %button#files Test
+        =  session.file_field :image, :multiple => true,name: "session_attachments[image][]",id: 'file'
+      %br
+      
+      
+      = f.submit nil, class: 'btn btn-primary'
+
+:javascript
+  $(document).ready(() => {
+    $('#files').click(event => {
+      $('#file').click();
+      return false;
+    })
+  })
