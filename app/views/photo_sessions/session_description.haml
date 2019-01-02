@@ -7,11 +7,16 @@
   #session_info{:style => "text-align: center; display: block  "}
     %h1= @session.title
     %p= @session.description
-  
-  = form_tag session_assessment_photo_sessions_path, :method => :get, :style => "text-align: center; display: block  " do
-    = text_field_tag("user_id",current_user.id,{type: "hidden"})
-    = text_field_tag("session_id",@session.id,{type: "hidden"})
-    = submit_tag "Begin assessment", class: "begin_assessment"
+  - if @session.is_uploaded
+    = form_tag session_assessment_photo_sessions_path, :method => :get, :style => "text-align: center; display: block  " do
+      = text_field_tag("user_id",current_user.id,{type: "hidden"})
+      = text_field_tag("session_id",@session.id,{type: "hidden"})
+      -if !@session.session_statuses.where(user_id: current_user.id, session_id: @session.id).exists?
+        = submit_tag "Begin assessment", class: "begin_assessment"
+      -else
+        = submit_tag "Continue assessment", class: "begin_assessment"
+  - else
+    %p{:style => "text-align: center"} SESSION IS NOT UPLOADED YET.
 
 
 
@@ -19,22 +24,26 @@
 :javascript
   $(document).ready(()=>{
     var beginAssessment = $(".begin_assessment");
-    beginAssessment[0].addEventListener("click",event => {
-      var userId = $(".currentId")[0].dataset["currentId"];
-      var sessionId = $(".sessionId")[0].dataset["sessionId"];
-      
+    if(beginAssessment != undefined){
 
-      $.ajax({
-        type: "POST",
-        url: "/session_statuses",
-        data: {user_id : userId, session_id : sessionId},
-        success: function(msg){
-          console.log( "Data Saved: ");
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown) {
-          console.log("error");
-        }
-      });
+    
+    beginAssessment[0].addEventListener("click",event => {
+        var userId = $(".currentId")[0].dataset["currentId"];
+        var sessionId = $(".sessionId")[0].dataset["sessionId"];
+        
+
+        $.ajax({
+          type: "POST",
+          url: "/session_statuses",
+          data: {user_id : userId, session_id : sessionId},
+          success: function(msg){
+            console.log( "Data Saved: ");
+          },
+          error: function(XMLHttpRequest, textStatus, errorThrown) {
+            console.log("error");
+          }
+        });
+      }
     })
   })
 

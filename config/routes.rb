@@ -22,6 +22,7 @@ Rails.application.routes.draw do
       post :generate_txt
       get :session_assessment 
       get :session_description 
+      post :upload_session
     end
   end
 

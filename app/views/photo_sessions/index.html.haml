@@ -1,6 +1,9 @@
 
 
 #sessions
+  - if flash[:error_information]
+    %h3{style: "text-align: center;padding: 10px"}
+      = flash[:error_information]
   = form_tag session_description_photo_sessions_path, :method => :get,style: "border-radius:5px;border: solid;position:relative;text-align: center;margin: 0 auto;width:50%" do
     %label{style: "font-size: 20px"} Find session to asset:
     = text_field_tag "token", ""

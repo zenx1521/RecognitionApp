@@ -24,7 +24,7 @@
   <br>
   <br>
 
-  .slider{:style => "text-align: center"}
+  .slider{:style => "text-align: center; padding: 20px;"}
     /= image_tag @session_attachments[0].image.url(:thumb), id: "imgContent"
     
     #imageContainer{:style => "position: relative; text-align: center; display: inline-block"}
@@ -33,13 +33,18 @@
     = button_tag "prev", class: 'prev'
     = button_tag "next", class: 'next'
   #checkboxes{:style => "text-align: center; display: block  "}
-  #savepoints{:style => "text-align: center"}
-    = button_tag "Save Points", class: 'save'
-  #addcheckbox{:style => "text-align: center"}
-    %input{:type => "text", :class => "checkboxText"}
-    = button_tag "Add New Checkbox", class: 'addCheckbox'
-  #savechecbkoxes{:style => "text-align: center"} 
-    = button_tag "Save Checkboxes", class: 'saveCheckboxes'
+
+  -if !@session.single_point and !@session.is_uploaded
+    #savepoints{:style => "text-align: center"}
+      = button_tag "Save Points", class: 'save'
+  -if !@session.is_uploaded
+    #addcheckbox{:style => "text-align: center"}
+      %input{:type => "text", :class => "checkboxText"}
+      = button_tag "Add New Checkbox", class: 'addCheckbox'
+    #savechecbkoxes{:style => "text-align: center"} 
+      = button_tag "Save Checkboxes", class: 'saveCheckboxes'
+    #uploadSession{:style => "text-align:center"}
+      = button_tag "Upload Session", class: 'uploadSession'
   #openfullview{:style => "text-align: center"}
     = button_tag "Full View", class: 'openModal'
     = button_tag "Hide Points", class: 'hide'
@@ -64,6 +69,8 @@
 
   = content_tag :div, "", class: "temp_information2", data: {session_id: @session.id}
 
+  = content_tag :div, "", class: "is_session_single_point", data: {single_point: @session.single_point}
+
 
 
 
@@ -74,11 +81,31 @@
   $(document).ready( () => {
     var temp = $('.temp_information').data("sessionAttachments")//$('.temp_information').data('session_attachments');
     var sessionId = $('.temp_information2').data("sessionId");
+    var isSinglePoint = $('.is_session_single_point').data("singlePoint");
+    console.log(isSinglePoint);
     console.log(temp);
+    
     var array = [];
     var pts = $('.attachment');
     var hide = false;
     
+    $('.uploadSession').click(e => {
+      alert("dzialam");
+      if(confirm("Are you sure your session is ready to be uploaded?")){      
+        $.ajax({
+          type: "POST",
+          url: "/photo_sessions/upload_session",
+          data: {session_id: sessionId},
+          success: function(msg){
+            alert("Your session have been uploaded!");
+          },
+          error: function(XMLHttpRequest, textStatus, errorThrown) {
+            alert(msg['error']);
+          }
+        });
+      }
+    })
+
     function setModalCheckboxesLayout(){
       var modalCheckboxesContent = $("#modalCheckboxes")[0];
       var x = temp[i].image_width;
@@ -95,7 +122,7 @@
           points[i].style.display = 'block';
           hide = false;
         }
-      } else {
+      } else {  
         for(var i = 0; i < points.length;i++){
           e.target.innerText = "Show Points";
           points[i].style.display = 'none';
@@ -136,8 +163,6 @@
     for(var x = 0; x < pts.length;x++){
       array.push(JSON.parse(pts[x].dataset["sPoints"]))
     }
-    //console.log(pts.data("sPoints"));
-    //console.log(pts.data("id"));
     function loadModalPoints(){
       var imgContainer = $('#imageContainerModal');
 
@@ -146,13 +171,40 @@
         var y = array[i][z].y*temp[i].image_height;
 
 
-        var div = document.createElement("div");
-        div.style.cssText = "position: absolute;width:20px;height:20px;background-color: red;z-index: 2000";
-        div.className = "myPoint";
-        div.style.top = (y-10) + 'px' ;
-        div.style.left = (x-10) + 'px' ;
-        div.dataset["id"] = array[i][z].id;
-        imgContainer[0].appendChild(div);
+        if(!isSinglePoint){        
+          var div = document.createElement("div");
+          div.style.zIndex = 2000;
+          div.className = "myPoint";
+          div.style.top = (y-15) + 'px' ;
+          div.style.left = (x-15) + 'px' ;
+          div.dataset["id"] = array[i][z].id;
+          var x_div = document.createElement("div");
+          x_div.className = "x_div";
+          var y_div = document.createElement("div");
+          y_div.className = "y_div";
+
+          div.appendChild(x_div);
+          div.appendChild(y_div);
+          imgContainer[0].appendChild(div);
+        } else {
+          var div = document.createElement("div");
+          div.style.zIndex = 2000;
+          div.className = "myPoint";
+          div.style.top = (y-15) + 'px' ;
+          div.style.left = (x-15) + 'px' ;
+          div.dataset["id"] = array[i][z].id;
+          var x_div = document.createElement("div");
+          x_div.className = "x_div";
+          var y_div = document.createElement("div");
+          y_div.className = "y_div";
+          x_div.style.width = temp[i].image_width + "px";
+          y_div.style.height = temp[i].image_height + "px";
+          x_div.style.left = -(x-15) + 'px';
+          y_div.style.top = -(y-15) + 'px';
+          div.appendChild(x_div);
+          div.appendChild(y_div);
+          imgContainer[0].appendChild(div);
+        }
 
       }
 
@@ -161,23 +213,48 @@
       var imgContainer = $('#imageContainer');
       var imgContent = $('#imgContent');
 
-      console.log(imgContent[0].width);
-      console.log(imgContent[0].height);
+
       for(var z = 0; z < array[i].length; z++){
+
+        var x = array[i][z].x*imgContent[0].width;
         console.log(array[i][z].x);
         console.log(imgContent[0].width);
-        console.log(imgContent[0].width*array[i][z].x);
-        var x = array[i][z].x*imgContent[0].width;
         var y = array[i][z].y*imgContent[0].height;
-
-        var div = document.createElement("div");
-        div.style.cssText = "position: absolute;width:20px;height:20px;background-color: red";
-        div.className = "myPoint";
-        div.style.top = (y-10) + 'px' ;
-        div.style.left = (x-10) + 'px' ;
-        div.dataset["id"] = array[i][z].id;
-        imgContainer[0].appendChild(div);
-
+        console.log(array[i][z].y);
+        console.log(imgContent[0].height);
+        if(!isSinglePoint){
+          var div = document.createElement("div");
+          var x_div = document.createElement("div");
+          x_div.className = "x_div";
+          var y_div = document.createElement("div");
+          y_div.className = "y_div";
+          div.appendChild(x_div);
+          div.appendChild(y_div);
+          div.className = "myPoint";
+          div.style.top = (y-15) + 'px' ;
+          div.style.left = (x-15) + 'px' ;
+          div.dataset["id"] = array[i][z].id;
+          imgContainer[0].appendChild(div);
+        } else {
+          var div = document.createElement("div");
+          div.className = "myPoint";
+          //div.style.width = imgContent[0].width + "px";
+          //div.style.height = imgContent[0].height + "px";
+          var x_div = document.createElement("div");
+          x_div.className = "x_div";
+          x_div.style.width = imgContent[0].width + "px";
+          var y_div = document.createElement("div");
+          y_div.className = "y_div";
+          div.style.top = (y-15) + 'px' ;
+          div.style.left = (x-15) + 'px' ;
+          y_div.style.height = imgContent[0].height + "px";
+          x_div.style.left = -(x-15) + 'px';
+          y_div.style.top = -(y-15) + 'px';
+          div.appendChild(x_div);
+          div.appendChild(y_div);
+          div.dataset["id"] = array[i][z].id;
+          imgContainer[0].appendChild(div);
+        }
       }
     }
     function deletePoints(){
@@ -223,7 +300,7 @@
     var currentId = temp[i].id;
     var pointsTable = [];
     var checkboxesTable = []
-    loadPoints();
+    
     img = $('#imgContent');
     loadCheckboxes('#checkboxes');
     loadCheckboxes('#checkboxesHolder');
@@ -243,7 +320,6 @@
     })
     btn4.click(e => {
       var text = $('.checkboxText');
-      console.log(text[0].value);
       var checkboxDiv = document.createElement("div");
       var checkbox = document.createElement("input");
       
@@ -255,55 +331,28 @@
       checkboxDiv.appendChild(checkbox);
       $('.slider')[0].appendChild(checkboxDiv);
     })
-      /*function addEventListenersForPoints(){
-      var myPoints = $('.myPoint');
-      for(var i = 0; i< myPoints.length;i++){
-        myPoints[i].addEventListener("click",e => {
-          var choosenValue = $('.choosen')[0].value;
-          var currentId = $('.currentId')[0].dataset['currentId'];
-          var currentActive = $('.active')[0].dataset.id;
-          console.log(currentActive);
-          for(var i = 0; i < myPoints.length;i++){
-            myPoints[i].classList.remove("active");
-            myPoints[i].style["background-color"] = "red";
-          };
-
-          //console.log(choosen[0].value);
-          $.ajax({
-            type: "POST",
-            url: "/marks/createOrUpdate",
-            data: {choosenValue : choosenValue, currentId : currentId, currentActive : currentActive},
-            success: function(msg){
-              alert( "Data Saved: " + msg );
-            },
-            error: function(XMLHttpRequest, textStatus, errorThrown) {
-              alert("some error");
-            }
-          });
-
-          e.target.classList.add("active");
-          e.target.style["background-color"] = "green";
-        });
-      }
-    }*/
-
-    img.click(e => {
-        var x = e.offsetX; 
-        var y = e.offsetY;
-        var scaleX = x/e.target.width;
-        var scaleY = y/e.target.height;
-        console.log(e.target.height);
-        console.log(scaleY);
-        alert("X Coordinate: " + x + " Y Coordinate: " + y);
-        var div = document.createElement("div");
-        div.style.cssText = "position: absolute;width:20px;height:20px;background-color: red";
-        div.className = "myPoint";
-        div.style.top = (y-10) + 'px' ;
-        div.style.left = (x-10) + 'px' ;
-        var imgContainer = $('#imageContainer');
-        pointsTable.push([scaleX,scaleY]);
-        imgContainer[0].appendChild(div);
-    })
+    if(!isSinglePoint){
+      img.click(e => {
+          var x = e.offsetX; 
+          var y = e.offsetY;
+          var scaleX = x/e.target.width;
+          var scaleY = y/e.target.height;
+          alert("X Coordinate: " + x + " Y Coordinate: " + y);
+          var div = document.createElement("div");
+          var x_div = document.createElement("div");
+          x_div.className = "x_div";
+          var y_div = document.createElement("div");
+          y_div.className = "y_div";
+          div.appendChild(x_div);
+          div.appendChild(y_div);
+          div.className = "myPoint";
+          div.style.top = (y-15) + 'px' ;
+          div.style.left = (x-15) + 'px' ;
+          var imgContainer = $('#imageContainer');
+          pointsTable.push([scaleX,scaleY]);
+          imgContainer[0].appendChild(div);
+      })
+    }
     btn.click(e =>{
       if(i < temp.length - 1){
         pointsTable = [];
@@ -314,7 +363,6 @@
         imageOriginal[0].src = temp[i+1].image.url
         i++;
         currentId = temp[i].id;
-        console.log(currentId);
         deletePoints();
         loadModalPoints();
         loadPoints();
@@ -360,6 +408,7 @@
     loadModalPoints();
     addEventListenersToCheckboxes();
     setModalCheckboxesLayout();
+    loadPoints();
   })
   
 

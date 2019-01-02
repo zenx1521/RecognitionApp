@@ -4,12 +4,10 @@ class Session < ApplicationRecord
   has_many :checkboxs, dependent: :destroy
   has_many :session_statuses, dependent: :destroy
   accepts_nested_attributes_for :session_attachments
+  #validates_length_of :session_attachments, minimum: 1 , :message => ": Please choose at least one photo"
+  #validates :session_attachments, presence: true
 
   def to_param
     token
-  end
-
-  def thumbnail
-    return self.image.variant(resize: '300x300')
   end
 end

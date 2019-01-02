@@ -120,6 +120,30 @@
   display: block;
 }*/
 
+.x_div {
+  position: absolute;
+  width: 30px;
+  height: 3px;
+  background-color: red;
+  top:14px;
+  pointer-events: none
+}
+
+.y_div {
+  position: absolute;
+  width: 3px;
+  height:30px;
+  background-color:red;
+  left:14px;
+  pointer-events: none
+}
+
+.myPoint {
+  position: absolute;
+  width:30px;
+  height:30px;
+}
+
 input[type = 'file']{
   visibility: none;
 }

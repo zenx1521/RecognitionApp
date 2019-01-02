@@ -3,6 +3,15 @@
 .panel.panel-default
   .panel-heading
     %h2 New Session 
+    -if @session.errors.any?
+      #error_explanation 
+      %h2
+        ERRORS:
+      %ul
+        = @session.errors.full_messages.each do |msg|
+          %li 
+            %h3
+              = msg
   .panel-body
     = simple_form_for @session, url: url do |f|
       .form-group{style: 'display:block'}
@@ -18,18 +27,14 @@
         = f.check_box :single_point, {},"true","false" 
       %br
 
-      = f.fields_for :session_attachments do |session|
-        %button#files Test
-        =  session.file_field :image, :multiple => true,name: "session_attachments[image][]",id: 'file'
+      = f.fields_for :session_attachments do |attachment|
+        =  attachment.file_field :image, :multiple => true,name: "session_attachments[image][]",id: 'file'
       %br
       
       
-      = f.submit nil, class: 'btn btn-primary'
+      = f.submit nil, class: 'btn btn-primary', id: 'submit'
 
-:javascript
-  $(document).ready(() => {
-    $('#files').click(event => {
-      $('#file').click();
-      return false;
-    })
-  })
+
+
+
+

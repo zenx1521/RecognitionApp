@@ -5,6 +5,9 @@ class ImageUploader < CarrierWave::Uploader::Base
   #include CarrierWave::MiniMagick
   process :convert => "png"
 
+  def extension_whitelist
+    %w(jpg jpeg tif png)
+  end
 
   # Choose what kind of storage to use for this uploader:
   storage :file

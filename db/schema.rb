@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20181220163348) do
+ActiveRecord::Schema.define(version: 20190102110236) do
 
   create_table "checkboxes", force: :cascade do |t|
     t.string   "description"
@@ -74,6 +74,7 @@ ActiveRecord::Schema.define(version: 20181220163348) do
     t.integer  "user_id"
     t.boolean  "single_point"
     t.integer  "points_counter"
+    t.boolean  "is_uploaded"
   end
 
   create_table "users", force: :cascade do |t|

@@ -54,8 +54,13 @@ class PhotoSessionsController < ApplicationController
     @session_attachments = @session.session_attachments.all
   end
   def session_description 
-    to_find = params[:token]
-    @session = Session.where(token: to_find)[0]
+    if(Session.where(token: params[:token]).exists?)
+      to_find = params[:token]
+      @session = Session.where(token: to_find)[0]
+    else
+      flash[:error_information] = "Session with this token doesn't exist"
+      redirect_to root_path
+    end
   end
 
   def new
@@ -68,24 +73,36 @@ class PhotoSessionsController < ApplicationController
     token = SecureRandom.hex
     @session.token = token
     @session.points_counter = 0
-    if @session.save
-      params[:session_attachments]['image'].each do |attachment|
-        @session_attachment = @session.session_attachments.create!(:image => attachment)
-      end
-      if(@session.single_point)
-        @session.session_attachments.all.each do |attachment|
-          point = attachment.points.new
-          point.x = 0.5
-          point.y = 0.5
-          point.save
-          @session.points_counter += 1          
+    @session.is_uploaded = false
+    if !params[:session_attachments].nil?
+      if @session.save
+        params[:session_attachments]['image'].each do |attachment|
+          @session_attachment = @session.session_attachments.create!(:image => attachment)
         end
-        @session.update_attributes(points_counter: @session.points_counter)
+        if(@session.single_point)
+          @session.session_attachments.all.each do |attachment|
+            point = attachment.points.new
+            point.x = 0.5
+            point.y = 0.5
+            point.save
+            @session.points_counter += 1          
+          end
+          @session.update_attributes(points_counter: @session.points_counter)
+        end
+        redirect_to photo_session_path(@session)
+      else
+        render 'new'
       end
-      redirect_to photo_session_path(@session)
     else
+      @session_attachment = @session.session_attachments.build    
+      @session.errors.add(:session_attachments,"Add at least one image")
       render 'new'
     end
+  end
+
+  def upload_session
+    session = Session.find(params[:session_id])
+    session.update_attributes(is_uploaded: true)
   end
 
   def search_session

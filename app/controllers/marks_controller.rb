@@ -25,6 +25,8 @@ class MarksController < ApplicationController
         if(!(Mark.where(user_id: current_user.id,point_id: point.id ).exists?))
           render json: {pointId: point.id, attachmentId: attachment.id}
           return
+        else
+          render json: {attachmentId: 0}
         end
       end
     end    
