@@ -49,8 +49,9 @@
     - if s.finished && s.user
       #session{:style => "text-align: center"}
         %div
-          #{s.user.email}: sesja zakonczona
-          = link_to "Generate TXT", generate_txt_photo_sessions_path(session_id: @session.id, user_id: s.user_id)
+          %h4
+            #{s.user.email}: session finished
+            = link_to "Generate TXT", generate_txt_photo_sessions_path(session_id: @session.id, user_id: s.user_id)
         
 
   - @session_attachments.each do |s|

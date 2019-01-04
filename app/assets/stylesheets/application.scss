@@ -20,8 +20,8 @@
 body {
   min-width: 980px;
 }
-
- .bg-modal {
+  
+  .bg-modal {
    background-color: rgba(0,0,0,0.7);
    position:fixed;
    top: 0;
@@ -146,6 +146,10 @@ body {
   position: absolute;
   width:30px;
   height:30px;
+}
+
+.myPoint.active {
+  outline: 2px solid black;
 }
 
 input[type = 'file']{
