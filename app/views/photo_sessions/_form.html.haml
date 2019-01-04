@@ -36,7 +36,8 @@
               = a.check_box :_destroy
               usuń
         - else
-          = a.file_field :image, :multiple => true, id: 'file', name: "new_attachments[]"
+          = a.file_field :image, :multiple => true, id: 'file', name: "new_attachments[]",
+            accept: 'image/png,image/jpeg,image/tiff'
       %br
       
       

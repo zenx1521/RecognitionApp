@@ -6,7 +6,7 @@ class ImageUploader < CarrierWave::Uploader::Base
   process :convert => "png"
 
   def extension_whitelist
-    %w(jpg jpeg tif png)
+    %w(jpg jpeg tif tiff png)
   end
 
   # Choose what kind of storage to use for this uploader:
@@ -51,4 +51,8 @@ class ImageUploader < CarrierWave::Uploader::Base
   # def filename
   #   "something.jpg" if original_filename
   # end
+
+  def filename
+    super.chomp(File.extname(super)) + '.png' if original_filename.present?
+  end
 end
