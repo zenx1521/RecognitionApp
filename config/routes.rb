@@ -19,7 +19,7 @@ Rails.application.routes.draw do
   resources :photo_sessions do 
     collection do 
       post :search_session
-      post :generate_txt
+      get :generate_txt
       get :session_assessment 
       get :session_description 
       post :upload_session

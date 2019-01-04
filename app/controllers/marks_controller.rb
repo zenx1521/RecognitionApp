@@ -25,7 +25,7 @@ class MarksController < ApplicationController
           return
         end
       end
-      render json: {response: "All point's were marked"}
-    end    
+    end 
+    render json: {response: "All point's were marked"}   
   end
 end

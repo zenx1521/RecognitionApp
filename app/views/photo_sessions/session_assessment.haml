@@ -175,7 +175,7 @@
         url: "/session_statuses/finish_session",
         data: {user_id: userId, session_id: sessionId},
         success: function(msg) {
-          console.log(msg['errored']);
+          location.href = "/";
         },
         error: function(msg) {
           alert("You didn't mark all points");

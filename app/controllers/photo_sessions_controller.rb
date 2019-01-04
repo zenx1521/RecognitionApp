@@ -4,43 +4,37 @@ class PhotoSessionsController < ApplicationController
 
   def index
     @sessions = current_user.sessions.all 
-    #@sessions = Session.all
   end
 
   def generate_txt 
     session = Session.find(params[:session_id])
     session_attachments = session.session_attachments.all 
-    puts params[:user_id]
+    user = User.find(params[:user_id])
+
     i = 1
-    path = "/home/jduraj/Dokumenty/new.txt"
-    File.open(path, "w+") do |f|
-      session_attachments.each do |s|
-        f.write("Picture " + i.to_s + ". ")
-        i += 1 
-        session_points = s.points
-        j = 1
-        session_points.each do |p|
-          f.write("\n")
-          f.write(j.to_s + ": ")
-          f.write("x: " + (s.image_width*p.x).round().to_s )
-          f.write(", y: " + (s.image_height*p.y).round().to_s )
 
-          j+=1
-          mark = p.marks.where(user_id: params[:user_id]).first
-          f.write(" Choosen option: " + mark.description )
-        end 
-        f.write("\n")       
-      end
-    end
-
+    text = ""
     session_attachments.each do |s|
+      text << ("Picture " + i.to_s + ". ")
+      i += 1 
       session_points = s.points
+      j = 1
       session_points.each do |p|
-        mark = p.marks.where(user_id: params[:user_id]).first
-        puts mark.description
-      end
+        text << ("\n")
+        text << (j.to_s + ": ")
+        text << ("x: " + (s.image_width*p.x).round().to_s )
+        text << (", y: " + (s.image_height*p.y).round().to_s )
+
+        j+=1
+        mark = p.marks.where(user_id: user.id).first
+        text << (" Choosen option: " + mark.description )
+      end 
+      text << ("\n")       
     end
+
+    send_data text, :filename => "sesja_#{session.token}_#{user.email}.txt"
   end 
+  
   def show
     @session_attachments = @session.session_attachments.all
     @session_statuses = SessionStatus.where(session_id: @session.id)

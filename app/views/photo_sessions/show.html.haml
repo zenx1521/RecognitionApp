@@ -46,10 +46,12 @@
     = button_tag "Hide Points", class: 'hide'
 
   - @session_statuses.each do |s|
-    - if s.finished
+    - if s.finished && s.user
       #session{:style => "text-align: center"}
-        sesja zakonczona
-        = button_tag "Generate txt", class: 'generateTXT', value: s.user_id
+        %div
+          #{s.user.email}: sesja zakonczona
+          = link_to "Generate TXT", generate_txt_photo_sessions_path(session_id: @session.id, user_id: s.user_id)
+        
 
   - @session_attachments.each do |s|
     = content_tag :div,"", class: "attachment", data: {s_points: s.points,id: s.id } 
@@ -153,22 +155,7 @@
       $(".bg-modal")[0].style.display = 'none';
     })
     
-    var generator = $('.generateTXT');
-    for(var i = 0;i < generator.length;i++){
-      generator[i].addEventListener("click",event => {
-        $.ajax({
-          type: "POST",
-          url: "/photo_sessions/generate_txt",
-          data: {user_id : event.target.value,session_id: sessionId },
-          success: function(msg){
-            alert( "Data Saved: " + msg );
-          },
-          error: function(XMLHttpRequest, textStatus, errorThrown) {
-            alert("some error");
-          }
-        });
-      })
-    }
+    
     var checkboxes = JSON.parse($('.attachment2')[0].dataset["sCheckboxes"]);
     
 
