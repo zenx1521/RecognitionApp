@@ -27,8 +27,16 @@
         = f.check_box :single_point, {},"true","false" 
       %br
 
-      = f.fields_for :session_attachments do |attachment|
-        =  attachment.file_field :image, :multiple => true,name: "session_attachments[image][]",id: 'file'
+      - f.object.session_attachments.build
+      = f.fields_for :session_attachments do |a|
+        - if a.object.persisted?
+          %div
+            = a.object.image_identifier
+            %label
+              = a.check_box :_destroy
+              usuń
+        - else
+          = a.file_field :image, :multiple => true, id: 'file', name: "new_attachments[]"
       %br
       
       

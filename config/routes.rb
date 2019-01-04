@@ -5,7 +5,6 @@ Rails.application.routes.draw do
 
   resources :session_attachments
 
-  post '/photo_sessions/search_session'
   resources :marks do
     collection do
       post :createOrUpdate
@@ -19,6 +18,7 @@ Rails.application.routes.draw do
   end
   resources :photo_sessions do 
     collection do 
+      post :search_session
       post :generate_txt
       get :session_assessment 
       get :session_description 
@@ -30,9 +30,14 @@ Rails.application.routes.draw do
   resources :points do 
     collection do 
       post :find_mark
+      post :remove
     end 
   end
-  resources :checkboxs
+  resources :checkboxs do
+    collection do
+      post :remove
+    end
+  end
   root 'photo_sessions#index'
 
 

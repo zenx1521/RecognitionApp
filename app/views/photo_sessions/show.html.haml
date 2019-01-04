@@ -2,55 +2,49 @@
   #close +
   #imageContainerModal{:style => "position:relative;text-align: center; display: inline-block"}
     = image_tag @session_attachments[0].image.url, id: "imgContentBig"
-  #modalCheckboxes
-    #checkboxesHolder
+
 
 
 #post_content
-  #description
-    %h1{:style => "text-align:center"}= @session.title
-    <br>
-    %h3{:style => "text-align:center"}= @session.description
-    <br>
+  #description{:style => "margin-bottom: 20px"}
+    %h1{:style => "text-align:center; margin-bottom: 40px"}= @session.title
+
+    %h3{:style => "text-align:center; margin-bottom: 60px"}= @session.description
+
     #token{:style => "text-align:center"}
       %h2  Token
       %h3= @session.token
 
-  <br>
-  #links{:style => "text-align: center"}
-    = link_to "Edit", edit_photo_session_path(@session), :style => " background-color:green; border:1px solid #660000; border-radius:5px; color:#fff; margin-right:10px; padding:10px 10px 10px 10px;"
-    = link_to "Delete", photo_session_path(@session), method: :delete, data: {confirm: "Are you sure you want to destroy your session?"},:style => " background-color:#cc0000; border:1px solid #660000; border-radius:5px; color:#fff; margin-right:10px; padding:10px 10px 10px 10px;"
-    = link_to "Home", root_path,:style => " background-color:blue; border:1px solid #660000; border-radius:5px; color:#fff; margin-right:10px; padding:10px 10px 10px 10px;" 
-  <br>
-  <br>
 
-  .slider{:style => "text-align: center; padding: 20px;"}
-    /= image_tag @session_attachments[0].image.url(:thumb), id: "imgContent"
-    
+  #links{:style => "text-align: center; margin-bottom:40px"}
+    = link_to "Edit", edit_photo_session_path(@session), class: "btn btn-success"
+    = link_to "Delete", photo_session_path(@session), method: :delete, data: {confirm: "Are you sure you want to destroy your session?"}, class: "btn btn-danger"
+    = link_to "Home", root_path, class: "btn btn-primary"
+
+  .slider{:style => "text-align: center; padding: 20px;"}    
     #imageContainer{:style => "position: relative; text-align: center; display: inline-block"}
       = image_tag @session_attachments[0].image.url, id: "imgContent", style: "width:800px"
-  #buttons{:style => "text-align: center;"}
+  #buttons{:style => "text-align: center;margin-bottom: 10px"}
     = button_tag "prev", class: 'prev'
     = button_tag "next", class: 'next'
   #checkboxes{:style => "text-align: center; display: block  "}
 
-  -if !@session.single_point and !@session.is_uploaded
-    #savepoints{:style => "text-align: center"}
-      = button_tag "Save Points", class: 'save'
+
   -if !@session.is_uploaded
-    #addcheckbox{:style => "text-align: center"}
+    #deletepoints{:style => "text-align:center;margin-bottom: 10px"}
+      = button_tag "Delete Points", class: 'deleteSelectedPoint'
+    #addcheckbox{:style => "text-align: center;margin-bottom: 10px"}
       %input{:type => "text", :class => "checkboxText"}
       = button_tag "Add New Checkbox", class: 'addCheckbox'
-    #savechecbkoxes{:style => "text-align: center"} 
-      = button_tag "Save Checkboxes", class: 'saveCheckboxes'
-    #uploadSession{:style => "text-align:center"}
+    #removeSelectedCheckbox{:style => "text-align:center;margin-bottom: 10px"}
+      = button_tag "Delete Selected Checkbox", class: 'deleteSelected'
+    #uploadSession{:style => "text-align:center;margin-bottom: 10px"}
       = button_tag "Upload Session", class: 'uploadSession'
-  #openfullview{:style => "text-align: center"}
+
+  #openfullview{:style => "text-align: center; margin-bottom: 40px"}
     = button_tag "Full View", class: 'openModal'
     = button_tag "Hide Points", class: 'hide'
-  <br>
-  <br>
-  <br>
+
   - @session_statuses.each do |s|
     - if s.finished
       #session{:style => "text-align: center"}
@@ -58,9 +52,7 @@
         = button_tag "Generate txt", class: 'generateTXT', value: s.user_id
 
   - @session_attachments.each do |s|
-    = content_tag :div, class: "attachment", data: {s_points: s.points,id: s.id }  do
-      = s.image_width
-      = s.image_height
+    = content_tag :div,"", class: "attachment", data: {s_points: s.points,id: s.id } 
   %div.currentId{ data: {current_id: current_user.id} }
     
   = content_tag :div, "", class: "attachment2", data: {s_checkboxes: @session.checkboxs}
@@ -79,18 +71,46 @@
 
 :javascript 
   $(document).ready( () => {
-    var temp = $('.temp_information').data("sessionAttachments")//$('.temp_information').data('session_attachments');
+    var allSessionImages = $('.temp_information').data("sessionAttachments")//$('.temp_information').data('session_attachments');
     var sessionId = $('.temp_information2').data("sessionId");
     var isSinglePoint = $('.is_session_single_point').data("singlePoint");
-    console.log(isSinglePoint);
-    console.log(temp);
-    
+
     var array = [];
     var pts = $('.attachment');
     var hide = false;
-    
+    var isDeleting = false;
+
+    var next = $('.next');
+    var prev = $('.prev');
+    var addCheckbox = $('.addCheckbox');
+
+
+    var numberOfCurrentPage = #{params[:current_page].try(:to_i) || 0};
+    var currentId = allSessionImages[numberOfCurrentPage].id;
+
+
+    $('.deleteSelected').click(e => {
+      var checkbox = $('.choosen');
+      var checkboxText = $('.choosen').val();
+      if(checkboxText != undefined){
+        $.ajax({
+          type: "POST",
+          url: "/checkboxs/remove",
+          data: {session_id: sessionId, checkbox_text: checkboxText},
+        });
+      }
+      checkbox.parent().remove();      
+    })
+    $('.deleteSelectedPoint').click(e => {
+      if(isDeleting){
+        e.target.innerText = "Delete Points"
+        isDeleting = false;
+      } else {
+        e.target.innerText = "Add Points"
+        isDeleting = true;
+      }
+    })
     $('.uploadSession').click(e => {
-      alert("dzialam");
       if(confirm("Are you sure your session is ready to be uploaded?")){      
         $.ajax({
           type: "POST",
@@ -106,13 +126,7 @@
       }
     })
 
-    function setModalCheckboxesLayout(){
-      var modalCheckboxesContent = $("#modalCheckboxes")[0];
-      var x = temp[i].image_width;
-      var y = temp[i].image_height;
-      modalCheckboxesContent.style.top = y + 80 +  "px";
-      modalCheckboxesContent.style.left = (x/2)  + "px";
-    }
+
 
     $('.hide').click(e => {
       var points = $('.myPoint');
@@ -155,8 +169,6 @@
         });
       })
     }
-
-    //console.log(JSON.parse(currentId[0].dataset["currentId"]));
     var checkboxes = JSON.parse($('.attachment2')[0].dataset["sCheckboxes"]);
     
 
@@ -166,95 +178,61 @@
     function loadModalPoints(){
       var imgContainer = $('#imageContainerModal');
 
-      for(var z = 0; z < array[i].length; z++){
-        var x = array[i][z].x*temp[i].image_width;
-        var y = array[i][z].y*temp[i].image_height;
+      for(var z = 0; z < array[numberOfCurrentPage].length; z++){
+        var x = array[numberOfCurrentPage][z].x*allSessionImages[numberOfCurrentPage].image_width;
+        var y = array[numberOfCurrentPage][z].y*allSessionImages[numberOfCurrentPage].image_height;
 
-
-        if(!isSinglePoint){        
-          var div = document.createElement("div");
-          div.style.zIndex = 2000;
-          div.className = "myPoint";
-          div.style.top = (y-15) + 'px' ;
-          div.style.left = (x-15) + 'px' ;
-          div.dataset["id"] = array[i][z].id;
-          var x_div = document.createElement("div");
-          x_div.className = "x_div";
-          var y_div = document.createElement("div");
-          y_div.className = "y_div";
-
-          div.appendChild(x_div);
-          div.appendChild(y_div);
-          imgContainer[0].appendChild(div);
-        } else {
-          var div = document.createElement("div");
-          div.style.zIndex = 2000;
-          div.className = "myPoint";
-          div.style.top = (y-15) + 'px' ;
-          div.style.left = (x-15) + 'px' ;
-          div.dataset["id"] = array[i][z].id;
-          var x_div = document.createElement("div");
-          x_div.className = "x_div";
-          var y_div = document.createElement("div");
-          y_div.className = "y_div";
-          x_div.style.width = temp[i].image_width + "px";
-          y_div.style.height = temp[i].image_height + "px";
+        var div = document.createElement("div");
+        div.style.zIndex = 2000;
+        div.className = "myPoint";
+        div.style.top = (y-15) + 'px' ;
+        div.style.left = (x-15) + 'px' ;
+        div.dataset["id"] = array[numberOfCurrentPage][z].id;
+        var x_div = document.createElement("div");
+        x_div.className = "x_div";
+        var y_div = document.createElement("div");
+        y_div.className = "y_div";
+        div.appendChild(x_div);
+        div.appendChild(y_div);
+        if(isSinglePoint){        
+          x_div.style.width = allSessionImages[numberOfCurrentPage].image_width + "px";
+          y_div.style.height = allSessionImages[numberOfCurrentPage].image_height + "px";
           x_div.style.left = -(x-15) + 'px';
           y_div.style.top = -(y-15) + 'px';
-          div.appendChild(x_div);
-          div.appendChild(y_div);
-          imgContainer[0].appendChild(div);
         }
-
+        imgContainer[0].appendChild(div);
       }
-
     }
     function loadPoints(){
       var imgContainer = $('#imageContainer');
       var imgContent = $('#imgContent');
 
 
-      for(var z = 0; z < array[i].length; z++){
+      for(var z = 0; z < array[numberOfCurrentPage].length; z++){
+        var x = array[numberOfCurrentPage][z].x*imgContent[0].width;
+        var y = array[numberOfCurrentPage][z].y*imgContent[0].height;
 
-        var x = array[i][z].x*imgContent[0].width;
-        console.log(array[i][z].x);
-        console.log(imgContent[0].width);
-        var y = array[i][z].y*imgContent[0].height;
-        console.log(array[i][z].y);
-        console.log(imgContent[0].height);
+        var div = document.createElement("div");
+        var x_div = document.createElement("div");
+        x_div.className = "x_div";
+        var y_div = document.createElement("div");
+        y_div.className = "y_div";
+        div.appendChild(x_div);
+        div.appendChild(y_div);
+        div.className = "myPoint";
+        div.dataset["id"] = array[numberOfCurrentPage][z].id;
         if(!isSinglePoint){
-          var div = document.createElement("div");
-          var x_div = document.createElement("div");
-          x_div.className = "x_div";
-          var y_div = document.createElement("div");
-          y_div.className = "y_div";
-          div.appendChild(x_div);
-          div.appendChild(y_div);
-          div.className = "myPoint";
           div.style.top = (y-15) + 'px' ;
           div.style.left = (x-15) + 'px' ;
-          div.dataset["id"] = array[i][z].id;
-          imgContainer[0].appendChild(div);
         } else {
-          var div = document.createElement("div");
-          div.className = "myPoint";
-          //div.style.width = imgContent[0].width + "px";
-          //div.style.height = imgContent[0].height + "px";
-          var x_div = document.createElement("div");
-          x_div.className = "x_div";
           x_div.style.width = imgContent[0].width + "px";
-          var y_div = document.createElement("div");
-          y_div.className = "y_div";
+          y_div.style.height = imgContent[0].height + "px";
           div.style.top = (y-15) + 'px' ;
           div.style.left = (x-15) + 'px' ;
-          y_div.style.height = imgContent[0].height + "px";
           x_div.style.left = -(x-15) + 'px';
           y_div.style.top = -(y-15) + 'px';
-          div.appendChild(x_div);
-          div.appendChild(y_div);
-          div.dataset["id"] = array[i][z].id;
-          imgContainer[0].appendChild(div);
         }
+        imgContainer[0].appendChild(div);
       }
     }
     function deletePoints(){
@@ -289,126 +267,118 @@
       })
     }
 
-    var btn = $('.next');
-    var btn2 = $('.prev');
-    var btn3 = $('.save');
-    var btn4 = $('.addCheckbox');
-    var btn5 = $('.saveCheckboxes');
-    var btn6 = $('.saveChoice');
 
-    var i = 0;
-    var currentId = temp[i].id;
-    var pointsTable = [];
-    var checkboxesTable = []
     
     img = $('#imgContent');
     loadCheckboxes('#checkboxes');
-    loadCheckboxes('#checkboxesHolder');
-    btn5.click(e => {
-        $.ajax({
-        type: "POST",
-        url: "/checkboxs",
-        data: {checkboxes : checkboxesTable, sessionId : sessionId },
-        success: function(msg){
-          alert( "Data Saved: " + msg );
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown) {
-          alert("some error");
-        }
-      });
+    addCheckbox.click(e => {
+      if(!($('.checkboxText')[0].value == "")){
+        var checkboxDiv = document.createElement("label");
+        var checkbox = document.createElement("input");
+        checkboxDiv.style.cssText = "text-align: center; display: inline-block"
+        var text = $('.checkboxText');
+        checkboxDiv.innerText = text[0].value;
+        checkbox.type = "checkbox";
+        checkbox.className = "optionCheckbox"
+        checkbox.value = text[0].value;
 
-    })
-    btn4.click(e => {
-      var text = $('.checkboxText');
-      var checkboxDiv = document.createElement("div");
-      var checkbox = document.createElement("input");
-      
-      checkboxDiv.innerText = text[0].value;
-      checkbox.type = "checkbox";
-      checkbox.value = text[0].value;
-      checkboxesTable.push(text[0].value);
-      console.log(checkboxesTable);
-      checkboxDiv.appendChild(checkbox);
-      $('.slider')[0].appendChild(checkboxDiv);
+        checkboxDiv.appendChild(checkbox);
+        $('#checkboxes')[0].appendChild(checkboxDiv);
+
+        $.ajax({
+          type: "POST",
+          url: "/checkboxs",
+          data: {checkbox_text: text[0].value,session_id: sessionId },
+        });
+        text[0].value = "";
+        addEventListenersToCheckboxes();
+      } else {
+        alert("You can't add empty option");
+      }
+
     })
     if(!isSinglePoint){
       img.click(e => {
+        if(!isDeleting){
           var x = e.offsetX; 
           var y = e.offsetY;
           var scaleX = x/e.target.width;
           var scaleY = y/e.target.height;
           alert("X Coordinate: " + x + " Y Coordinate: " + y);
-          var div = document.createElement("div");
-          var x_div = document.createElement("div");
-          x_div.className = "x_div";
-          var y_div = document.createElement("div");
-          y_div.className = "y_div";
-          div.appendChild(x_div);
-          div.appendChild(y_div);
-          div.className = "myPoint";
-          div.style.top = (y-15) + 'px' ;
-          div.style.left = (x-15) + 'px' ;
-          var imgContainer = $('#imageContainer');
-          pointsTable.push([scaleX,scaleY]);
-          imgContainer[0].appendChild(div);
+
+          $.ajax({
+            type: "POST",
+            url: "/points",
+            data: {scale_x: scaleX,scale_y: scaleY, sessionAttachmentId : currentId },
+          });
+
+          reloadPage();
+        }         
       })
     }
-    btn.click(e =>{
-      if(i < temp.length - 1){
-        pointsTable = [];
+    next.click(e =>{
+      if(numberOfCurrentPage < allSessionImages.length - 1){
+
         img = $('#imgContent');
         var imageOriginal = $('#imgContentBig');
-
-        img[0].src = temp[i+1].image.url;
-        imageOriginal[0].src = temp[i+1].image.url
-        i++;
-        currentId = temp[i].id;
+        img[0].src = allSessionImages[numberOfCurrentPage+1].image.url;
+        imageOriginal[0].src = allSessionImages[numberOfCurrentPage+1].image.url
+        numberOfCurrentPage++;
+        currentId = allSessionImages[numberOfCurrentPage].id;
         deletePoints();
         loadModalPoints();
         loadPoints();
-        if(i == temp.length -1){
-        }
-
+        addEventListenersToDeletePoints()
       }
     })
-    btn2.click(e =>{
-      if(i > 0){
-        pointsTable = [];
-        if(i == temp.length -1){
+    prev.click(e =>{
+      if(numberOfCurrentPage > 0){
+        if(numberOfCurrentPage == allSessionImages.length -1){
           $('.endButton').remove();
         }
         img = $('#imgContent');
-        console.log(temp[i].id);
-        img[0].src = temp[i-1].image.url;
-        i--;
-        currentId = temp[i].id;;
+        img[0].src = allSessionImages[numberOfCurrentPage-1].image.url;
+        numberOfCurrentPage--;
+        currentId = allSessionImages[numberOfCurrentPage].id;;
         deletePoints();
         loadModalPoints();
         loadPoints();
+        addEventListenersToDeletePoints()
       }
     })
-
-    btn3.click(e =>{
-
-      var dateToSend = JSON.stringify(pointsTable);
-
-      $.ajax({
-        type: "POST",
-        url: "/points",
-        data: {pts : dateToSend, sessionAttachmentId : currentId },
-        success: function(msg){
-          alert( "Data Saved: " + msg );
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown) {
-          alert("some error");
-        }
-      });
-    })
+    function addEventListenersToDeletePoints(){
+      var allPoints = $('.myPoint');
+      for(var j = 0; j < allPoints.length;j++){
+        allPoints[j].addEventListener("click",event => {
+           if(isDeleting){
+            var pointId = event.target.dataset.id;
+            for(var k = 0; k < array[numberOfCurrentPage].length;k++){
+              if(array[numberOfCurrentPage][k].id == pointId){
+                array[numberOfCurrentPage].splice(k,1);
+              }
+            }
+            $.ajax({
+              type: "POST",
+              url: "/points/remove",
+              data: {point_id: pointId},
+            });
+            event.target.remove();
+          }
+        })
+      }
+    }
     var myPoints = $('.myPoint');
+
     loadModalPoints();
     addEventListenersToCheckboxes();
-    setModalCheckboxesLayout();
+
     loadPoints();
+    addEventListenersToDeletePoints();
+
+    function reloadPage() {
+      history.replaceState({}, document.title, "?current_page=" + numberOfCurrentPage);
+      location.reload();
+    }
   })
   
 

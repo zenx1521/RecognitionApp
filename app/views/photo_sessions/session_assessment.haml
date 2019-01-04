@@ -2,37 +2,32 @@
   #close +
   #imageContainerModal{:style => "position:relative;text-align: center; display: inline-block"}
     = image_tag @session_attachments[0].image.url, id: "imgContentBig"
-  #modalCheckboxes
-    #checkboxesHolder
+
 
 #post_content
 
   = stylesheet_link_tag "farbtastic"
   = javascript_include_tag "farbtastic"
 
-
-
-
-  
-
-
-  .slider{:style => "text-align: center"}
+  .slider{:style => "text-align: center; margin-bottom: 30px"}
     #imageContainer{:style => "position: relative; text-align: center; display: inline-block"}
       = image_tag @session_attachments[0].image.url, id: "imgContent", style: "width:800px"
   
-  #checkboxes{:style => "text-align: center; display: block  "}
-  #buttons{:style => "text-align: center;"}
+  #checkboxes{:style => "text-align: center; display: block ; margin-bottom:20px"}
+  #buttons{:style => "text-align: center; margin-bottom:20px"}
     = button_tag "prev", class: 'prev'
     = button_tag "next", class: 'next'
-  #colorpickerholder
+  #colorpickerholder{:style => "margin-bottom: 20px"}
     %div#colorpicker{:style => "margin: auto"}
-  #finishsession{:style => "text-align: center; display: block  "}
-  #openfullview{:style => "text-align: center"}
+  #pickerHide{:style => "text-align: center; margin-bottom: 20px"}
+    = button_tag "Hide picker", id: 'hidePicker'
+  #finishsession{:style => "text-align: center; display: block; margin-bottom: 20px "}
+    = button_tag "Finish Session",class: "finish"
+  #openfullview{:style => "text-align: center; margin-bottom: 20px"}
     = button_tag "Full View", class: 'openModal'
     = button_tag "Hide Points", class: 'isHidden'
-  #pickerHide{:style => "text-align: center"}
-    = button_tag "Hide picker", id: 'hidePicker'
-  #findUnmarked{:style => "text-align: center"}
+
+  #findUnmarked{:style => "text-align: center; margin-bottom: 20px"}
     = button_tag "Next unmarked ", id: 'unmarked'
 
 
@@ -41,7 +36,6 @@
   %div.currentId{ data: {current_id: current_user.id} }
   = content_tag :div,"", class: "attachment2", data: {s_checkboxes: @session.checkboxs}
 
-  /%div.attachment2{data: {s_checkboxes: @session.checkboxs}}
   = content_tag :div,"", class: "temp_information", data: {session_attachments: @session_attachments}
 
   = content_tag :div, "", class: "is_session_single_point", data: {single_point: @session.single_point}
@@ -67,35 +61,28 @@
         type: "POST",
         url: "/marks/find_unmarked",
         data: {session_id: sessionId},
-        success: function(msg){
-          //alert(msg['attachmentPath']);
-          for(var j = 0; j < temp.length;j++){
-            if(temp[j].id == msg['attachmentId']){
-              i = j;
-
-              if(isOnLast != true){
-                checkForEnd();
+        success: function(data){
+          if(!data['response']){
+            for(var j = 0; j < allSessionImages.length;j++){
+              if(allSessionImages[j].id == data['attachmentId']){
+                numberOfCurrentPage = j; 
+                img = $('#imgContent');
+                var imageOriginal = $('#imgContentBig');
+                img[0].src = allSessionImages[numberOfCurrentPage].image.url;
+                imageOriginal[0].src = allSessionImages[numberOfCurrentPage].image.url
+                              
+                deletePoints();
+                loadPoints(1, data['pointId']);
+                loadModalPoints();
+                addEventListenersForPoints();
               }
-              
-              img = $('#imgContent');
-              var imageOriginal = $('#imgContentBig');
-
-              img[0].src = temp[i].image.url;
-              imageOriginal[0].src = temp[i].image.url
-
-              
-              
-              deletePoints();
-              loadPoints();
-              loadModalPoints();
-              addEventListenersForPoints();
-
             }
+          } else {
+            alert(data['response'])
           }
-
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown) {
-          alert("wololo");
+        error: function() {
+          alert("All points were marked");
         }
       });
     })
@@ -103,53 +90,40 @@
     function onColorChange(color) {
       points = $(".myPoint");
       for(var i = 0; i < points.length;i++){
-        points[i].style["background-color"] = color;
+        var pointsChildren = points[i].children;
+        for(var j = 0;j < pointsChildren.length;j++){
+          pointsChildren[j].style['background-color'] = color;
+        }
       }
     }
 
     function loadModalPoints(){
       var imgContainer = $('#imageContainerModal');
-      console.log(imgContainer);
-      for(var z = 0; z < pointsArray[i].length; z++){
-        var x = pointsArray[i][z].x*temp[i].image_width;
-        var y = pointsArray[i][z].y*temp[i].image_height;
+      for(var z = 0; z < pointsArray[numberOfCurrentPage].length; z++){
+        var x = pointsArray[numberOfCurrentPage][z].x*allSessionImages[numberOfCurrentPage].image_width;
+        var y = pointsArray[numberOfCurrentPage][z].y*allSessionImages[numberOfCurrentPage].image_height;
 
-        if(!isSinglePoint){        
-          var div = document.createElement("div");
-          div.style.zIndex = 2000;
-          div.className = "myPoint";
-          div.style.top = (y-15) + 'px' ;
-          div.style.left = (x-15) + 'px' ;
-          div.dataset["id"] = pointsArray[i][z].id;
-          var x_div = document.createElement("div");
-          x_div.className = "x_div";
-          var y_div = document.createElement("div");
-          y_div.className = "y_div";
-
-          div.appendChild(x_div);
-          div.appendChild(y_div);
-          imgContainer[0].appendChild(div);
-        } else {
-          var div = document.createElement("div");
-          div.style.zIndex = 2000;
-          div.className = "myPoint";
-          div.style.top = (y-15) + 'px' ;
-          div.style.left = (x-15) + 'px' ;
-          div.dataset["id"] = pointsArray[i][z].id;
-          var x_div = document.createElement("div");
-          x_div.className = "x_div";
-          var y_div = document.createElement("div");
-          y_div.className = "y_div";
-          x_div.style.width = temp[i].image_width + "px";
-          y_div.style.height = temp[i].image_height + "px";
+        var div = document.createElement("div");
+        div.style.zIndex = 2000;
+        div.className = "myPoint";
+        div.style.top = (y-15) + 'px' ;
+        div.style.left = (x-15) + 'px' ;
+        div.dataset["id"] = pointsArray[numberOfCurrentPage][z].id;
+        var x_div = document.createElement("div");
+        x_div.className = "x_div";
+        var y_div = document.createElement("div");
+        y_div.className = "y_div";
+        div.appendChild(x_div);
+        div.appendChild(y_div);
+        if(isSinglePoint){        
+          x_div.style.width = allSessionImages[numberOfCurrentPage].image_width + "px";
+          y_div.style.height = allSessionImages[numberOfCurrentPage].image_height + "px";
           x_div.style.left = -(x-15) + 'px';
           y_div.style.top = -(y-15) + 'px';
-          div.appendChild(x_div);
-          div.appendChild(y_div);
-          imgContainer[0].appendChild(div);
+          
         }
+        imgContainer[0].appendChild(div);
       }
-
     }
 
     $(".openModal").click(e => {
@@ -176,13 +150,11 @@
       }
     })
 
-    //$('#colorpicker').farbtastic($('input[name^="color"]'));
-    var temp = $('.temp_information').data("sessionAttachments");
-    console.log("TEMP TEMP TEMP");
-    console.log(temp);  
+
+    var allSessionImages = $('.temp_information').data("sessionAttachments");
     var next = $('.next');
     var prev = $('.prev');
-    var i = 0;
+    var numberOfCurrentPage = 0;
     var pts = $('.attachment');
     var pointsArray = [];
     var checkboxes = JSON.parse($('.attachment2')[0].dataset["sCheckboxes"]);
@@ -192,67 +164,48 @@
     for(var x = 0; x < pts.length;x++){
       pointsArray.push(JSON.parse(pts[x].dataset["sPoints"]));
     }
-    loadPoints();
+    loadPoints(0);
     addEventListenersForPoints();
 
-    function checkForEnd(){
-        if(i == temp.length - 1){
-          isOnLast = true;
-          var btn = document.createElement("BUTTON"); 
-          btn.classList.add("endButton");
-          var t = document.createTextNode("Finish Session");
-          btn.appendChild(t); 
-          btn.addEventListener("click",event => {
-            var userId = $(".currentId")[0].dataset["currentId"];
-            var sessionId = $(".temp_information2")[0].dataset["sessionId"];
-            $.ajax({
-              type: "POST",
-              url: "/session_statuses/finish_session",
-              data: {user_id: userId, session_id: sessionId},
-              success: function(msg){
-                alert(msg['error']);
-              },
-              error: function(XMLHttpRequest, textStatus, errorThrown) {
-                alert(msg['error']);
-              }
-            });
-          })
-          $('#finishsession')[0].appendChild(btn);
-
+    $('.finish').click(e => {
+      var userId = $(".currentId")[0].dataset["currentId"];
+      var sessionId = $(".temp_information2")[0].dataset["sessionId"];
+      $.ajax({
+        type: "POST",
+        url: "/session_statuses/finish_session",
+        data: {user_id: userId, session_id: sessionId},
+        success: function(msg) {
+          console.log(msg['errored']);
+        },
+        error: function(msg) {
+          alert("You didn't mark all points");
         }
-    }
+      });
+    })
+
     next.click(e =>{
-      if(i < temp.length - 1){
+      if(numberOfCurrentPage < allSessionImages.length - 1){
         img = $('#imgContent');
         var imageOriginal = $('#imgContentBig');
-        img[0].src = temp[i+1].image.url;
-        imageOriginal[0].src = temp[i+1].image.url
-        i++;
-
-        checkForEnd();
-
+        img[0].src = allSessionImages[numberOfCurrentPage+1].image.url;
+        imageOriginal[0].src = allSessionImages[numberOfCurrentPage+1].image.url
+        numberOfCurrentPage++;
         deletePoints();
-        loadPoints();
+        loadPoints(0);
         loadModalPoints();
         addEventListenersForPoints();
-
-
       }
     })
     prev.click(e =>{
-      if(i > 0){
-        isOnLast = false;
-        if(i == temp.length -1){
-          $('.endButton').remove();
-        }
+      if(numberOfCurrentPage > 0){
         img = $('#imgContent');
         var imageOriginal = $('#imgContentBig');
-        img[0].src = temp[i-1].image.url;
-        imageOriginal[0].src = temp[i-1].image.url
-        i--;
-        currentId = temp[i].id;;
+        img[0].src = allSessionImages[numberOfCurrentPage-1].image.url;
+        imageOriginal[0].src = allSessionImages[numberOfCurrentPage-1].image.url
+        numberOfCurrentPage--;
+        currentId = allSessionImages[numberOfCurrentPage].id;;
         deletePoints();
-        loadPoints();
+        loadPoints(0);
         loadModalPoints();
         addEventListenersForPoints();
       }
@@ -260,68 +213,72 @@
     function deletePoints(){
       $('.myPoint').remove();  
     }
-    function loadPoints(){
+    function loadPoints(wasSearched, optArg){
+
       var imgContainer = $('#imageContainer');
       var imgContent = $('#imgContent');
 
+      for(var z = 0; z < pointsArray[numberOfCurrentPage].length; z++){
 
-      for(var z = 0; z < pointsArray[i].length; z++){
-
-        var x = pointsArray[i][z].x*imgContent[0].width;
-        var y = pointsArray[i][z].y*imgContent[0].height;
+        var x = pointsArray[numberOfCurrentPage][z].x*imgContent[0].width;
+        var y = pointsArray[numberOfCurrentPage][z].y*imgContent[0].height;
+        var div = document.createElement("div");
+        var x_div = document.createElement("div");
+        x_div.className = "x_div";
+        var y_div = document.createElement("div");
+        y_div.className = "y_div";
+        div.appendChild(x_div);
+        div.appendChild(y_div);
+        div.className = "myPoint";
+        div.style.top = (y-15) + 'px' ;
+        div.style.left = (x-15) + 'px' ;
+        div.dataset["id"] = pointsArray[numberOfCurrentPage][z].id;
         if(!isSinglePoint){
-
-          var div = document.createElement("div");
-          var x_div = document.createElement("div");
-          x_div.className = "x_div";
-          var y_div = document.createElement("div");
-          y_div.className = "y_div";
-          div.appendChild(x_div);
-          div.appendChild(y_div);
-          div.className = "myPoint";
           div.style.top = (y-15) + 'px' ;
           div.style.left = (x-15) + 'px' ;
-          div.dataset["id"] = pointsArray[i][z].id;
-          imgContainer[0].appendChild(div);
         } else {
-          var div = document.createElement("div");
-          div.className = "myPoint";
-          //div.style.width = imgContent[0].width + "px";
-          //div.style.height = imgContent[0].height + "px";
-          var x_div = document.createElement("div");
-          x_div.className = "x_div";
-          x_div.style.width = imgContent[0].width + "px";
-          var y_div = document.createElement("div");
-          y_div.className = "y_div";
           div.style.top = (y-15) + 'px' ;
           div.style.left = (x-15) + 'px' ;
+          x_div.style.width = imgContent[0].width + "px";
           y_div.style.height = imgContent[0].height + "px";
           x_div.style.left = -(x-15) + 'px';
           y_div.style.top = -(y-15) + 'px';
-          div.appendChild(x_div);
-          div.appendChild(y_div);
-          div.dataset["id"] = pointsArray[i][z].id;
-          imgContainer[0].appendChild(div);
-
         }
-
-
-        if(z == 0 ){
-          div.classList.add("active");
-          //div.style["background-color"] = "green"; 
-
-          x_div.style["background-color"] = "green";
-          y_div.style["background-color"] = "green";
-
-
-          //var choosenValue = $('.choosen')[0].value;
-          var currentId = $('.currentId')[0].dataset['currentId'];
-          var currentActive = $('.active')[0].dataset.id;
-          console.log(currentId);
-          checkIfMarkExists();
-
-        }
+        imgContainer[0].appendChild(div);
+        if(wasSearched == 0){
+          if(z == 0 ){
+            div.classList.add("active");
+            x_div.style["background-color"] = "green";
+            y_div.style["background-color"] = "green";
+            var currentId = $('.currentId')[0].dataset['currentId'];
+            var currentActive = $('.active')[0].dataset.id;
+            checkIfMarkExists();
+          }
+        } 
       }
+      if(wasSearched == 1){
+        for(var k = 0; k < pointsArray[numberOfCurrentPage].length; k++){
+          if(pointsArray[numberOfCurrentPage][k].id == optArg){
+            var myPoints = $('.myPoint');
+            for(var l = 0; l < myPoints.length;l++){
+              myPoints[l].classList.remove("active");
+              var pointChildren = myPoints[l].children;
+              for(var j = 0; j < pointChildren.length;j++){
+                pointChildren[j].style["background-color"] = "red";
+              }
+            }                
+            var proper_div = $("div[data-id='" + optArg +"']");
+            proper_div[0].classList.add("active");
+            var pointChildren = proper_div[0].children;
+            for(var a = 0; a < pointChildren.length;a++){
+              pointChildren[a].style["background-color"] = "green";
+            }
+            var currentId = $('.currentId')[0].dataset['currentId'];
+            var currentActive = $('.active')[0].dataset.id;
+            checkIfMarkExists();
+            }
+          }
+      } 
     }
 
     function addEventListenersForPoints(){
@@ -347,9 +304,7 @@
           var currentId = $('.currentId')[0].dataset['currentId'];
           var currentActive = $('.active')[0].dataset.id;
 
-          checkIfMarkExists();
-
-          console.log(currentActive)
+          checkIfMarkExists();  
         });
       }
     }
@@ -413,13 +368,6 @@
         }
       });
     }
-    function setModalCheckboxesLayout(){
-      var modalCheckboxesContent = $("#modalCheckboxes")[0];
-      var x = temp[i].image_width;
-      var y = temp[i].image_height;
-      modalCheckboxesContent.style.top = y + 80 +  "px";
-      modalCheckboxesContent.style.left = (x/2)  + "px";
-    }
 
     function loadCheckboxes(){
       checkboxes.forEach(chBox => {
@@ -437,7 +385,6 @@
       })
     }
     loadModalPoints();
-    setModalCheckboxesLayout();
   })
   
 

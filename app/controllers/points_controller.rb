@@ -3,24 +3,26 @@ class PointsController < ApplicationController
 
   end
   def create
-    to_save = ActiveSupport::JSON.decode(params[:pts])
-    table_len =  to_save.length
+    #to_save = ActiveSupport::JSON.decode(params[:pts])
+    #table_len =  to_save.length
     
     session_attachment_id = ActiveSupport::JSON.decode(params[:sessionAttachmentId]);
     session_attachment = SessionAttachment.find(session_attachment_id);
     session = session_attachment.session
-    session.points_counter += table_len
+    session.points_counter += 1
     session.update_attributes(points_counter: session.points_counter)
 
+    point = Point.new
+    point.x = params[:scale_x]
+    point.y = params[:scale_y]
+    point.session_attachment_id = session_attachment_id
+    point.save
+  end
 
-
-    to_save.each do |s|
-      point = Point.new
-      point.x = s[0]
-      point.y = s[1]
-      point.session_attachment_id = session_attachment_id
-      point.save
-    end
+  def remove
+    point = Point.find(params[:point_id])
+    point.destroy
+    render head: :ok
   end
 
   def find_mark

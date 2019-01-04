@@ -1,13 +1,21 @@
 class Session < ApplicationRecord
   belongs_to :user
-  has_many :session_attachments, dependent: :destroy
+  has_many :session_attachments, dependent: :destroy, inverse_of: :session
   has_many :checkboxs, dependent: :destroy
   has_many :session_statuses, dependent: :destroy
-  accepts_nested_attributes_for :session_attachments
-  #validates_length_of :session_attachments, minimum: 1 , :message => ": Please choose at least one photo"
-  #validates :session_attachments, presence: true
+  accepts_nested_attributes_for :session_attachments, allow_destroy: true
+  
+  validate :validate_session_attachments_presence
 
   def to_param
     token
+  end
+
+  private
+
+  def validate_session_attachments_presence
+    if session_attachments.reject(&:marked_for_destruction?).blank?
+      errors.add(:session_attachments,"At least one image must be added.")
+    end
   end
 end

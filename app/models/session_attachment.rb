@@ -1,7 +1,7 @@
 class SessionAttachment < ApplicationRecord
   mount_uploader :image, ImageUploader
   has_many :points, dependent: :destroy
-  belongs_to :session
+  belongs_to :session, inverse_of: :session_attachments
   before_save :update_image_attributes
 
   private

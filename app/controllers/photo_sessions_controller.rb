@@ -15,15 +15,19 @@ class PhotoSessionsController < ApplicationController
     path = "/home/jduraj/Dokumenty/new.txt"
     File.open(path, "w+") do |f|
       session_attachments.each do |s|
-        f.write(i.to_s + ": ")
+        f.write("Picture " + i.to_s + ". ")
         i += 1 
         session_points = s.points
         j = 1
         session_points.each do |p|
-          f.write(j.to_s + ":")
+          f.write("\n")
+          f.write(j.to_s + ": ")
+          f.write("x: " + (s.image_width*p.x).round().to_s )
+          f.write(", y: " + (s.image_height*p.y).round().to_s )
+
           j+=1
           mark = p.marks.where(user_id: params[:user_id]).first
-          f.write(mark.description + " ")
+          f.write(" Choosen option: " + mark.description )
         end 
         f.write("\n")       
       end
@@ -40,23 +44,23 @@ class PhotoSessionsController < ApplicationController
   def show
     @session_attachments = @session.session_attachments.all
     @session_statuses = SessionStatus.where(session_id: @session.id)
-
-    #path = "/home/jduraj/Dokumenty/new.txt"
-    #content = "data from the form"
-    #File.open(path, "w+") do |f|
-    #  f.write(content)
-    #end
-    
     
   end
+
   def session_assessment 
     @session = Session.find(params[:session_id])
     @session_attachments = @session.session_attachments.all
   end
-  def session_description 
-    if(Session.where(token: params[:token]).exists?)
-      to_find = params[:token]
-      @session = Session.where(token: to_find)[0]
+  
+  def session_description
+    @session = if params[:token].present?
+      Session.where(token: params[:token]).first
+    else
+      nil
+    end
+
+    if @session
+      @session_status = @session.session_statuses.where(user_id: current_user.id).first
     else
       flash[:error_information] = "Session with this token doesn't exist"
       redirect_to root_path
@@ -65,37 +69,20 @@ class PhotoSessionsController < ApplicationController
 
   def new
     @session = current_user.sessions.new
-    @session_attachment = @session.session_attachments.build
   end
 
   def create
     @session = current_user.sessions.new(session_params)
+
     token = SecureRandom.hex
+    
     @session.token = token
     @session.points_counter = 0
     @session.is_uploaded = false
-    if !params[:session_attachments].nil?
-      if @session.save
-        params[:session_attachments]['image'].each do |attachment|
-          @session_attachment = @session.session_attachments.create!(:image => attachment)
-        end
-        if(@session.single_point)
-          @session.session_attachments.all.each do |attachment|
-            point = attachment.points.new
-            point.x = 0.5
-            point.y = 0.5
-            point.save
-            @session.points_counter += 1          
-          end
-          @session.update_attributes(points_counter: @session.points_counter)
-        end
-        redirect_to photo_session_path(@session)
-      else
-        render 'new'
-      end
+    if @session.save
+      create_single_point if @session.single_point
+      redirect_to photo_session_path(@session)
     else
-      @session_attachment = @session.session_attachments.build    
-      @session.errors.add(:session_attachments,"Add at least one image")
       render 'new'
     end
   end
@@ -115,11 +102,11 @@ class PhotoSessionsController < ApplicationController
   end
 
   def edit
-
   end 
 
   def update
     if @session.update(session_params)
+      create_single_point if @session.single_point
       redirect_to photo_session_path(@session)
     else
       render 'edit'
@@ -138,7 +125,36 @@ class PhotoSessionsController < ApplicationController
     @session = Session.where(token: params[:id]).first
     raise ActiveRecord::RecordNotFound unless @session
   end
+  
   def session_params
-    params.require(:session).permit(:title,:description,:single_point,session_attachments_attributes: [:id, :session_id, :image])
+    if params[:session] && params[:new_attachments].present?
+      if params[:session][:session_attachments_attributes]
+        params[:session][:session_attachments_attributes] = params[:session][:session_attachments_attributes].values
+      else
+        params[:session][:session_attachments_attributes] = []
+      end
+
+      params[:new_attachments].each do |image|
+        params[:session][:session_attachments_attributes] << { image: image }
+      end
+    end
+
+    params.require(:session).permit(:title,:description,:single_point,session_attachments_attributes: [:id, :image, :_destroy])
+  end
+
+  def create_single_point
+    points_counter = 0
+    
+    @session.session_attachments.all.each do |attachment|
+      attachment.points.destroy_all
+      
+      point = attachment.points.new
+      point.x = 0.5
+      point.y = 0.5
+      point.save
+      
+      points_counter += 1
+    end
+    @session.update_columns(points_counter: points_counter)
   end
 end

@@ -20,7 +20,7 @@ class SessionStatusesController < ApplicationController
       session_status.update_attributes(:finished => true)
       redirect_to root_path
     else
-      render json: {error: "You didn't mark all points"}
+      render json: {errored: "You didn't mark all points"}
     end
   end
 end

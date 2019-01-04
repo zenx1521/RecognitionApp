@@ -1,9 +1,8 @@
 class MarksController < ApplicationController
   def createOrUpdate
     if(Mark.where(user_id: current_user.id, point_id: params[:currentActive] ).exists?)
-      toChange = Mark.where(user_id: current_user.id, point_id: params[:currentActive]).first
-      toChange.update_attributes(description: params[:choosenValue])
-      puts "update"
+      to_change = Mark.where(user_id: current_user.id, point_id: params[:currentActive]).first
+      to_change.update_attributes(description: params[:choosenValue])
     else
       currentPoint = Point.find(params[:currentActive])
       mark = currentPoint.marks.build
@@ -12,8 +11,7 @@ class MarksController < ApplicationController
       mark.description = params[:choosenValue]
       mark.save
       session_status = SessionStatus.where(user_id: current_user.id, session_id: params[:session_id]).first
-      puts session_status.marked_counter += 1
-      session_status.update_attributes(marked_counter: session_status.marked_counter)
+      session_status.update_attributes(marked_counter: session_status.marked_counter + 1)
 
     end
 
@@ -25,10 +23,9 @@ class MarksController < ApplicationController
         if(!(Mark.where(user_id: current_user.id,point_id: point.id ).exists?))
           render json: {pointId: point.id, attachmentId: attachment.id}
           return
-        else
-          render json: {attachmentId: 0}
         end
       end
+      render json: {response: "All point's were marked"}
     end    
   end
 end
