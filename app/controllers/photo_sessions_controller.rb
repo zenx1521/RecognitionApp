@@ -3,7 +3,7 @@ class PhotoSessionsController < ApplicationController
   before_filter :authenticate_user!
 
   def index
-    @sessions = current_user.sessions.all 
+    @sessions = current_user.sessions.all.order(created_at: :desc)
   end
 
   def generate_txt 
@@ -15,7 +15,7 @@ class PhotoSessionsController < ApplicationController
 
     text = ""
     session_attachments.each do |s|
-      text << ("Picture " + i.to_s + ". ")
+      text << ("Picture: " + s[:image] + ". ")
       i += 1 
       session_points = s.points
       j = 1

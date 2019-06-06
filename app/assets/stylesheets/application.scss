@@ -71,7 +71,16 @@ body {
  body{
    background: #EDEFF0;
  }
-
+ #buttonsHolder {
+  margin:auto;
+  text-align:center;
+  background-color:#90ee90;
+  width:700px;
+  padding:20px;
+  border: solid 1px black;
+  border-radius: 30px;
+  margin-bottom: 40px;
+ }
  .wrapper {
    width: 100%;
    max-width: 1400px;
@@ -123,12 +132,21 @@ body {
 /*label {
   display: block;
 }*/
-
+.checkboxHolder {
+  text-align: center;
+  background-color: #F0F8FF;
+  margin:5px;
+  margin-bottom: 10px;
+  padding:4px;
+  display: inline-block;
+  border: 1px solid black;
+  border-radius:5px
+}
 .x_div {
   position: absolute;
   width: 30px;
   height: 3px;
-  background-color: red;
+
   top:14px;
   pointer-events: none
 }
@@ -137,7 +155,7 @@ body {
   position: absolute;
   width: 3px;
   height:30px;
-  background-color:red;
+
   left:14px;
   pointer-events: none
 }
@@ -148,8 +166,14 @@ body {
   height:30px;
 }
 
+.myModalPoint {
+  position: absolute;
+  width:30px;
+  height:30px;
+}
+
 .myPoint.active {
-  outline: 2px solid black;
+  outline: 4px solid green;
 }
 
 input[type = 'file']{

@@ -7,7 +7,7 @@
 
 #post_content
   #description{:style => "margin-bottom: 20px"}
-    %h1{:style => "text-align:center; margin-bottom: 40px"}= @session.title
+    %h1{:style => "text-align:center; margin-bottom: 40px; font-size: 50px"}= @session.title
 
     %h3{:style => "text-align:center; margin-bottom: 60px"}= @session.description
 
@@ -17,40 +17,46 @@
 
 
   #links{:style => "text-align: center; margin-bottom:40px"}
-    = link_to "Edit", edit_photo_session_path(@session), class: "btn btn-success"
-    = link_to "Delete", photo_session_path(@session), method: :delete, data: {confirm: "Are you sure you want to destroy your session?"}, class: "btn btn-danger"
-    = link_to "Home", root_path, class: "btn btn-primary"
+    -if !@session.is_uploaded
+      = link_to "Edit", edit_photo_session_path(@session), class: "btn btn-success btn-lg"
+    = link_to "Delete", photo_session_path(@session), method: :delete, data: {confirm: "Are you sure you want to destroy your session?"}, class: "btn btn-danger btn-lg"
+    = link_to "Home", root_path, class: "btn btn-primary btn-lg"
 
   .slider{:style => "text-align: center; padding: 20px;"}    
     #imageContainer{:style => "position: relative; text-align: center; display: inline-block"}
       = image_tag @session_attachments[0].image.url, id: "imgContent", style: "width:800px"
-  #buttons{:style => "text-align: center;margin-bottom: 10px"}
-    = button_tag "prev", class: 'prev'
-    = button_tag "next", class: 'next'
-  #checkboxes{:style => "text-align: center; display: block  "}
+  #buttons{:style => "text-align: center;margin-bottom: 50px"}
+    = button_tag "<", class: 'prev btn btn-primary btn-lg'
+    = button_tag ">", class: 'next btn btn-primary btn-lg'
+
+  #buttonsHolder
+    -if !@session.is_uploaded && !@session.single_point
+      #deletepoints{:style => "text-align:center;margin-bottom: 10px"}
+        = button_tag "Delete Points", class: 'deleteSelectedPoint btn btn-primary btn-lg'  
+    #checkboxes{:style => "text-align: center; display: block  "}
 
 
-  -if !@session.is_uploaded
-    #deletepoints{:style => "text-align:center;margin-bottom: 10px"}
-      = button_tag "Delete Points", class: 'deleteSelectedPoint'
-    #addcheckbox{:style => "text-align: center;margin-bottom: 10px"}
-      %input{:type => "text", :class => "checkboxText"}
-      = button_tag "Add New Checkbox", class: 'addCheckbox'
-    #removeSelectedCheckbox{:style => "text-align:center;margin-bottom: 10px"}
-      = button_tag "Delete Selected Checkbox", class: 'deleteSelected'
-    #uploadSession{:style => "text-align:center;margin-bottom: 10px"}
-      = button_tag "Upload Session", class: 'uploadSession'
 
-  #openfullview{:style => "text-align: center; margin-bottom: 40px"}
-    = button_tag "Full View", class: 'openModal'
-    = button_tag "Hide Points", class: 'hide'
+    -if !@session.is_uploaded
+      #addcheckbox{:style => "text-align: center;margin-bottom: 10px"}
+        %input{:type => "text", :class => "checkboxText"}
+        = button_tag "Add New Checkbox", class: 'addCheckbox btn btn-primary btn-lg'
+        = button_tag "Delete Selected Checkbox", class: 'deleteSelected btn btn-primary btn-lg'
+
+    #uploadSession{:style => "text-align:center;margin-bottom: 40px"}
+      -if !@session.is_uploaded
+        = button_tag "Upload Session", class: 'uploadSession btn btn-primary btn-lg'
+      = button_tag "Full View", class: 'openModal btn btn-primary btn-lg'
+      = button_tag "Hide Points", class: 'hidePoints btn btn-primary btn-lg'
+
+
 
   - @session_statuses.each do |s|
     - if s.finished && s.user
       #session{:style => "text-align: center"}
         %div
           %h4
-            #{s.user.email}: session finished
+            #{s.user.name} #{s.user.surname}: session finished
             = link_to "Generate TXT", generate_txt_photo_sessions_path(session_id: @session.id, user_id: s.user_id)
         
 
@@ -63,7 +69,7 @@
   = content_tag :div, "", class: "temp_information", data: {session_attachments: @session_attachments}
 
   = content_tag :div, "", class: "temp_information2", data: {session_id: @session.id}
-
+  = content_tag :div, "", class: "is_session_uploaded", data: {is_uploaded: @session.is_uploaded}
   = content_tag :div, "", class: "is_session_single_point", data: {single_point: @session.single_point}
 
 
@@ -77,6 +83,7 @@
     var allSessionImages = $('.temp_information').data("sessionAttachments")//$('.temp_information').data('session_attachments');
     var sessionId = $('.temp_information2').data("sessionId");
     var isSinglePoint = $('.is_session_single_point').data("singlePoint");
+    var isUploaded = $('.is_session_uploaded').data("isUploaded");
 
     var array = [];
     var pts = $('.attachment');
@@ -86,10 +93,23 @@
     var next = $('.next');
     var prev = $('.prev');
     var addCheckbox = $('.addCheckbox');
+            
+            
+
 
 
     var numberOfCurrentPage = #{params[:current_page].try(:to_i) || 0};
     var currentId = allSessionImages[numberOfCurrentPage].id;
+    var checkboxes = JSON.parse($('.attachment2')[0].dataset["sCheckboxes"]);
+    var checkboxesLength = checkboxes.length;
+    for(var x = 0; x < pts.length;x++){
+      array.push(JSON.parse(pts[x].dataset["sPoints"]))
+    }
+
+    var img2 = $('#imgContent');
+    var imageOriginal = $('#imgContentBig');
+    img2[0].src = allSessionImages[numberOfCurrentPage].image.url;
+    imageOriginal[0].src = allSessionImages[numberOfCurrentPage].image.url
 
 
     $('.deleteSelected').click(e => {
@@ -100,9 +120,12 @@
           type: "POST",
           url: "/checkboxs/remove",
           data: {session_id: sessionId, checkbox_text: checkboxText},
+          success: function(){
+            checkboxesLength--; 
+          }
         });
       }
-      checkbox.parent().remove();      
+      checkbox.parent().remove();    
     })
     $('.deleteSelectedPoint').click(e => {
       if(isDeleting){
@@ -114,35 +137,43 @@
       }
     })
     $('.uploadSession').click(e => {
-      if(confirm("Are you sure your session is ready to be uploaded?")){      
-        $.ajax({
-          type: "POST",
-          url: "/photo_sessions/upload_session",
-          data: {session_id: sessionId},
-          success: function(msg){
-            alert("Your session have been uploaded!");
-          },
-          error: function(XMLHttpRequest, textStatus, errorThrown) {
-            alert(msg['error']);
-          }
-        });
+      if(confirm("Are you sure your session is ready to be uploaded?")){ 
+        if(checkboxesLength != 0){      
+          $.ajax({
+            type: "POST",
+            url: "/photo_sessions/upload_session",
+            data: {session_id: sessionId},
+            success: function(msg){
+              alert("Your session have been uploaded!");
+              reloadPage();
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown) {
+              alert(msg['error']);
+            }
+          });
+        } else {
+          alert("Add at least one option!");
+        }
       }
     })
 
 
 
-    $('.hide').click(e => {
+    $('.hidePoints').click(e => {
       var points = $('.myPoint');
+      var modalPoints = $('.myModalPoint');
       if(hide){
         for(var i = 0; i < points.length;i++){
           e.target.innerText = "Hide Points";
           points[i].style.display = 'block';
+          modalPoints[i].style.display = 'block'
           hide = false;
         }
       } else {  
         for(var i = 0; i < points.length;i++){
           e.target.innerText = "Show Points";
           points[i].style.display = 'none';
+          modalPoints[i].style.display = 'none';
           hide = true;
         }
       }
@@ -157,12 +188,7 @@
     })
     
     
-    var checkboxes = JSON.parse($('.attachment2')[0].dataset["sCheckboxes"]);
-    
 
-    for(var x = 0; x < pts.length;x++){
-      array.push(JSON.parse(pts[x].dataset["sPoints"]))
-    }
     function loadModalPoints(){
       var imgContainer = $('#imageContainerModal');
 
@@ -172,7 +198,7 @@
 
         var div = document.createElement("div");
         div.style.zIndex = 2000;
-        div.className = "myPoint";
+        div.className = "myModalPoint";
         div.style.top = (y-15) + 'px' ;
         div.style.left = (x-15) + 'px' ;
         div.dataset["id"] = array[numberOfCurrentPage][z].id;
@@ -180,6 +206,8 @@
         x_div.className = "x_div";
         var y_div = document.createElement("div");
         y_div.className = "y_div";
+        x_div.style["background-color"] = "red";
+        y_div.style["background-color"] = "red";
         div.appendChild(x_div);
         div.appendChild(y_div);
         if(isSinglePoint){        
@@ -208,6 +236,8 @@
         div.appendChild(x_div);
         div.appendChild(y_div);
         div.className = "myPoint";
+        x_div.style["background-color"] = "red";
+        y_div.style["background-color"] = "red";
         div.dataset["id"] = array[numberOfCurrentPage][z].id;
         if(!isSinglePoint){
           div.style.top = (y-15) + 'px' ;
@@ -224,7 +254,8 @@
       }
     }
     function deletePoints(){
-      $('.myPoint').remove();  
+      $('.myPoint').remove(); 
+      $('.myModalPoint').remove(); 
     }
     function addEventListenersToCheckboxes(){
       var checkboxes = $('.optionCheckbox');
@@ -243,14 +274,16 @@
     function loadCheckboxes(checkboxesHolderId){
       checkboxes.forEach(chBox => {
         var checkboxDiv = document.createElement("label");
+        checkboxDiv.className = "checkboxHolder";
         var checkbox = document.createElement("input");
-        checkboxDiv.innerText = chBox.description;
-        checkboxDiv.style.cssText = "text-align: center; display: inline-block"
+        checkboxDiv.innerText = " " + chBox.description + " ";
         checkbox.type = "checkbox";
         checkbox.className = "optionCheckbox"
         checkbox.value = chBox.description;
+    
         checkboxDiv.appendChild(checkbox);
-        $(checkboxesHolderId)[0].appendChild(checkboxDiv);
+
+        $('#checkboxes')[0].appendChild(checkboxDiv);
 
       })
     }
@@ -262,8 +295,9 @@
     addCheckbox.click(e => {
       if(!($('.checkboxText')[0].value == "")){
         var checkboxDiv = document.createElement("label");
+        checkboxDiv.className = "checkboxHolder"
         var checkbox = document.createElement("input");
-        checkboxDiv.style.cssText = "text-align: center; display: inline-block"
+
         var text = $('.checkboxText');
         checkboxDiv.innerText = text[0].value;
         checkbox.type = "checkbox";
@@ -280,12 +314,14 @@
         });
         text[0].value = "";
         addEventListenersToCheckboxes();
+        checkboxesLength++;
+
       } else {
         alert("You can't add empty option");
       }
 
     })
-    if(!isSinglePoint){
+    if(!isSinglePoint && !isUploaded){
       img.click(e => {
         if(!isDeleting){
           var x = e.offsetX; 
@@ -316,7 +352,9 @@
         deletePoints();
         loadModalPoints();
         loadPoints();
-        addEventListenersToDeletePoints()
+        if(!isUploaded){
+          addEventListenersToDeletePoints();
+        }
       }
     })
     prev.click(e =>{
@@ -331,7 +369,9 @@
         deletePoints();
         loadModalPoints();
         loadPoints();
-        addEventListenersToDeletePoints()
+        if(!isUploaded){
+          addEventListenersToDeletePoints();
+        }
       }
     })
     function addEventListenersToDeletePoints(){
@@ -355,14 +395,13 @@
         })
       }
     }
-    var myPoints = $('.myPoint');
 
     loadModalPoints();
-    addEventListenersToCheckboxes();
-
     loadPoints();
-    addEventListenersToDeletePoints();
-
+    addEventListenersToCheckboxes();
+    if(!isUploaded){
+      addEventListenersToDeletePoints();
+    }
     function reloadPage() {
       history.replaceState({}, document.title, "?current_page=" + numberOfCurrentPage);
       location.reload();

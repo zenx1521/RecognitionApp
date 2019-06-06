@@ -2,7 +2,7 @@
 
 .panel.panel-default
   .panel-heading
-    %h2 New Session 
+    %h2 Create/Edit Session
     -if @session.errors.any?
       #error_explanation 
       %h2
@@ -17,7 +17,7 @@
       .form-group{style: 'display:block'}
         = f.label :title
         %br
-        = f.text_field :title, class: 'form-control'
+        = f.text_field :title, class: 'form-control', hint: 'Write a title of your session here'
       .form-group{style: 'display:block'}
         = f.label :description
         %br

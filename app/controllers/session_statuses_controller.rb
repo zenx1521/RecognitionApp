@@ -1,7 +1,7 @@
 class SessionStatusesController < ApplicationController
   def create 
     if((SessionStatus.where(user_id: params[:user_id], session_id: params[:session_id] ).exists?))
-      puts "oki"
+      puts "ok"
     else
       session_status = SessionStatus.new
       session_status.user_id = params[:user_id]

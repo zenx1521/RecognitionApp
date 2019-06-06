@@ -1,5 +1,9 @@
-%h1 Edit Post 
+#post_content
+  %h1 Edit Session
 
-= render 'form'
+  -if @session.is_uploaded
+    %h1 You can't edit uploaded session
+  -else
+    = render 'form'
 
-= link_to "Cancel", photo_session_path
+  = link_to "Cancel", photo_session_path, class: "btn btn-primary"

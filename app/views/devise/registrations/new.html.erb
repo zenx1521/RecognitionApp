@@ -19,9 +19,21 @@
           <%= f.password_field :password, autocomplete: "off", class: 'form-control' %>
         </div>
 
+
+
         <div class="form-group">
           <%= f.label :password_confirmation %><br />
           <%= f.password_field :password_confirmation, autocomplete: "off",  class: 'form-control'%>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :name %><br />
+          <%= f.text_field :name, autocomplete: "off", class: 'form-control' %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :surname %><br />
+          <%= f.text_field :surname,autocomplte: "off" ,class: 'form-control' %>
         </div>
 
         <div class="actions">

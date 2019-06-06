@@ -4,7 +4,8 @@ class Session < ApplicationRecord
   has_many :checkboxs, dependent: :destroy
   has_many :session_statuses, dependent: :destroy
   accepts_nested_attributes_for :session_attachments, allow_destroy: true
-  
+  validates :title, presence: true
+  validates :description, presence: true
   validate :validate_session_attachments_presence
 
   def to_param
