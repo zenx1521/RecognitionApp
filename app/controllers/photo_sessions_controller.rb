@@ -11,26 +11,8 @@ class PhotoSessionsController < ApplicationController
     session_attachments = session.session_attachments.all 
     user = User.find(params[:user_id])
 
-    i = 1
-
-    text = ""
-    session_attachments.each do |s|
-      text << ("Picture: " + s[:image] + ". ")
-      i += 1 
-      session_points = s.points
-      j = 1
-      session_points.each do |p|
-        text << ("\n")
-        text << (j.to_s + ": ")
-        text << ("x: " + (s.image_width*p.x).round().to_s )
-        text << (", y: " + (s.image_height*p.y).round().to_s )
-
-        j+=1
-        mark = p.marks.where(user_id: user.id).first
-        text << (" Choosen option: " + mark.description )
-      end 
-      text << ("\n")       
-    end
+    txt_generator = TxtGeneratorService.new(session,session_attachments,user)
+    text = txt_generator.call
 
     send_data text, :filename => "sesja_#{session.token}_#{user.email}.txt"
   end 
@@ -38,6 +20,7 @@ class PhotoSessionsController < ApplicationController
   def show
     @session_attachments = @session.session_attachments.all
     @session_statuses = SessionStatus.where(session_id: @session.id)
+    @t = @session.as_json.merge(attachments: @session.session_attachments.map(&:as_json)).to_s
     
   end
 
@@ -116,7 +99,9 @@ class PhotoSessionsController < ApplicationController
   private 
 
   def find_session
+    #@session = Session.includes(:session_attachments).merge(:session_attachments).where(token: params[:id]).first
     @session = Session.where(token: params[:id]).first
+    puts @session
     raise ActiveRecord::RecordNotFound unless @session
   end
   

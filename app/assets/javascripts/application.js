@@ -15,3 +15,5 @@
 //= require_tree .
 //= require farbtastic
 //= require bootstrap
+//= require assessment
+//= require show_session

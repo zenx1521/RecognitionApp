@@ -46,15 +46,6 @@ ActiveRecord::Schema.define(version: 20190113122321) do
     t.float    "image_height"
   end
 
-  create_table "session_progresses", force: :cascade do |t|
-    t.boolean  "finished"
-    t.string   "photo_session_id"
-    t.string   "integer"
-    t.string   "user_id"
-    t.datetime "created_at",       null: false
-    t.datetime "updated_at",       null: false
-  end
-
   create_table "session_statuses", force: :cascade do |t|
     t.boolean  "finished"
     t.integer  "user_id"
